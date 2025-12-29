@@ -1,9 +1,14 @@
 import type { Config } from 'payload'
 
-import type { MCPAccessSettings, PluginMCPServerConfig } from './types.js'
+import type { MCPAccessSettings, PluginMCPServerConfig, SecurityConfig } from './types.js'
 
 import { createAPIKeysCollection } from './collections/createApiKeysCollection.js'
+import { createAuditLogsCollection } from './collections/createAuditLogsCollection.js'
+import { createConfirmationsCollection } from './collections/createConfirmationsCollection.js'
+import { createUndoStoreCollection } from './collections/createUndoStoreCollection.js'
 import { initializeMCPHandler } from './endpoints/mcp.js'
+import { createStreamingEndpoint } from './endpoints/streaming.js'
+import { getEnhancedApiKeyFields } from './middleware/apiKeyEnhancements.js'
 
 declare module 'payload' {
   export interface PayloadRequest {
@@ -11,7 +16,23 @@ declare module 'payload' {
   }
 }
 
-export type { MCPAccessSettings }
+export type { MCPAccessSettings, SecurityConfig }
+
+export { streamManager } from './endpoints/streaming.js'
+export type { StreamEvent, StreamManager, StreamSession } from './endpoints/streaming.js'
+export { createCollectionToolFactory, createToolRegistry } from './mcp/toolRegistry.js'
+export type { DeferredTool, ToolContext, ToolDefinition, ToolRegistry } from './mcp/toolRegistry.js'
+export { createApiKeyManager } from './middleware/apiKeyEnhancements.js'
+export type { ApiKeyManager } from './middleware/apiKeyEnhancements.js'
+export { createAuditLogger } from './middleware/auditLogger.js'
+export type { AuditLogger } from './middleware/auditLogger.js'
+export { createConfirmationManager } from './middleware/confirmationManager.js'
+export type { ConfirmationManager } from './middleware/confirmationManager.js'
+// Export middleware utilities for advanced usage
+export { createRateLimiter, getRateLimitHeaders } from './middleware/rateLimiter.js'
+export type { RateLimiter, RateLimitResult } from './middleware/rateLimiter.js'
+export { createUndoManager } from './middleware/undoManager.js'
+export type { UndoManager } from './middleware/undoManager.js'
 /**
  * The MCP Plugin for Payload. This plugin allows you to add MCP capabilities to your Payload project.
  *
@@ -49,16 +70,45 @@ export const mcpPlugin =
      *  - If a custom tool has gone haywire, admins can disallow that tool.
      *
      */
-    const apiKeyCollection = createAPIKeysCollection(
+    // Get security configuration
+    const securityConfig = pluginOptions.security || {}
+
+    // Create API key collection with optional enhancements
+    let apiKeyCollection = createAPIKeysCollection(
       collections,
       customTools,
       experimentalTools,
       pluginOptions,
     )
+
+    // Add enhanced API key fields if enabled
+    if (securityConfig.apiKeyEnhancements) {
+      const enhancedFields = getEnhancedApiKeyFields(securityConfig.apiKeyEnhancements)
+      apiKeyCollection = {
+        ...apiKeyCollection,
+        fields: [...apiKeyCollection.fields, ...enhancedFields],
+      }
+    }
+
     if (pluginOptions.overrideApiKeyCollection) {
       config.collections.push(pluginOptions.overrideApiKeyCollection(apiKeyCollection))
     } else {
       config.collections.push(apiKeyCollection)
+    }
+
+    // Add audit logs collection if audit logging is enabled
+    if (securityConfig.auditLogging?.enabled !== false) {
+      config.collections.push(createAuditLogsCollection())
+    }
+
+    // Add confirmations collection if confirmations are enabled
+    if (securityConfig.confirmations?.enabled) {
+      config.collections.push(createConfirmationsCollection())
+    }
+
+    // Add undo store collection if undo is enabled
+    if (securityConfig.undo?.enabled !== false) {
+      config.collections.push(createUndoStoreCollection())
     }
 
     /**
@@ -93,6 +143,18 @@ export const mcpPlugin =
       method: 'get',
       path: '/mcp',
     })
+
+    /**
+     * Streaming endpoint for real-time feedback during MCP operations.
+     * Uses Server-Sent Events (SSE) for progress updates, confirmations, and undo notifications.
+     */
+    if (securityConfig.streaming?.enabled !== false) {
+      config.endpoints.push({
+        handler: createStreamingEndpoint(),
+        method: 'get',
+        path: '/mcp/stream',
+      })
+    }
 
     return config
   }

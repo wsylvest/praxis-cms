@@ -3,6 +3,238 @@ import type { z } from 'zod'
 
 import { type ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 
+/**
+ * Rate limiting configuration
+ */
+export type RateLimitingConfig = {
+  /**
+   * Enable rate limiting
+   * @default true
+   */
+  enabled?: boolean
+  /**
+   * Maximum requests per window per API key
+   * @default 100
+   */
+  maxRequests?: number
+  /**
+   * Maximum tokens per window per API key (optional)
+   */
+  maxTokensPerWindow?: number
+  /**
+   * API key IDs to skip rate limiting for
+   */
+  skipKeys?: string[]
+  /**
+   * Time window in milliseconds
+   * @default 60000 (1 minute)
+   */
+  windowMs?: number
+}
+
+/**
+ * Audit logging configuration
+ */
+export type AuditLoggingConfig = {
+  /**
+   * Enable audit logging
+   * @default true
+   */
+  enabled?: boolean
+  /**
+   * Log failed operations
+   * @default true
+   */
+  logErrors?: boolean
+  /**
+   * Log rate limited requests
+   * @default true
+   */
+  logRateLimited?: boolean
+  /**
+   * Log successful operations
+   * @default true
+   */
+  logSuccess?: boolean
+  /**
+   * Maximum parameter size to store (bytes)
+   * @default 10000
+   */
+  maxParameterSize?: number
+  /**
+   * Additional fields to redact from parameters
+   */
+  redactFields?: string[]
+  /**
+   * Retention period in days
+   * @default 90
+   */
+  retentionDays?: number
+}
+
+/**
+ * Confirmation configuration for destructive operations
+ */
+export type ConfirmationConfig = {
+  /**
+   * Default confirmation level
+   * @default 'inline'
+   */
+  defaultLevel?: 'email' | 'inline' | 'webhook'
+  /**
+   * Enable confirmation system
+   * @default false
+   */
+  enabled?: boolean
+  /**
+   * Confirmation expiration time in milliseconds
+   * @default 300000 (5 minutes)
+   */
+  expirationMs?: number
+  /**
+   * Collections that always require confirmation
+   */
+  protectedCollections?: string[]
+  /**
+   * Operations that require confirmation
+   * @default ['delete']
+   */
+  requireConfirmationFor?: Array<'create' | 'delete' | 'execute' | 'update'>
+  /**
+   * Collections that never require confirmation
+   */
+  skipCollections?: string[]
+  /**
+   * Webhook secret for verification
+   */
+  webhookSecret?: string
+  /**
+   * Webhook URL for external confirmation
+   */
+  webhookUrl?: string
+}
+
+/**
+ * Undo/rollback configuration
+ */
+export type UndoConfig = {
+  /**
+   * Collections that don't support undo
+   */
+  disabledCollections?: string[]
+  /**
+   * Enable undo functionality
+   * @default true
+   */
+  enabled?: boolean
+  /**
+   * Collections that support undo (if not set, all collections support undo)
+   */
+  enabledCollections?: string[]
+  /**
+   * Undo expiration time in milliseconds
+   * @default 3600000 (1 hour)
+   */
+  expirationMs?: number
+  /**
+   * Maximum undo entries per user
+   * @default 100
+   */
+  maxEntriesPerUser?: number
+}
+
+/**
+ * Streaming (SSE) configuration
+ */
+export type StreamingConfig = {
+  /**
+   * Enable SSE streaming endpoint
+   * @default true
+   */
+  enabled?: boolean
+  /**
+   * Heartbeat interval in milliseconds
+   * @default 30000 (30 seconds)
+   */
+  heartbeatIntervalMs?: number
+  /**
+   * Session timeout for stale sessions in milliseconds
+   * @default 300000 (5 minutes)
+   */
+  sessionTimeoutMs?: number
+}
+
+/**
+ * API key enhancement configuration
+ */
+export type ApiKeyEnhancementsConfig = {
+  /**
+   * Default expiration time in days for new API keys
+   * @default 365
+   */
+  defaultExpirationDays?: number
+  /**
+   * Enable key expiration
+   * @default true
+   */
+  enableExpiration?: boolean
+  /**
+   * Enable IP allowlist
+   * @default true
+   */
+  enableIpAllowlist?: boolean
+  /**
+   * Enable key rotation tracking
+   * @default true
+   */
+  enableRotation?: boolean
+  /**
+   * Enable usage tracking
+   * @default true
+   */
+  enableUsageTracking?: boolean
+  /**
+   * Warning days before expiration
+   * @default 30
+   */
+  expirationWarningDays?: number
+  /**
+   * Grace period after rotation in hours
+   * @default 24
+   */
+  rotationGracePeriodHours?: number
+}
+
+/**
+ * Security middleware configuration
+ */
+export type SecurityConfig = {
+  /**
+   * API key enhancements (expiration, rotation, IP allowlist)
+   */
+  apiKeyEnhancements?: ApiKeyEnhancementsConfig
+  /**
+   * Audit logging configuration
+   */
+  auditLogging?: AuditLoggingConfig
+  /**
+   * Confirmation configuration for destructive operations
+   */
+  confirmations?: ConfirmationConfig
+  /**
+   * Rate limiting configuration
+   */
+  rateLimiting?: RateLimitingConfig
+  /**
+   * Streaming (SSE) configuration
+   */
+  streaming?: StreamingConfig
+  /**
+   * Undo/rollback configuration
+   */
+  undo?: UndoConfig
+}
+
 export type PluginMCPServerConfig = {
   /**
    * Set the collections that should be available as resources via MCP.
@@ -275,6 +507,12 @@ export type PluginMCPServerConfig = {
     req: PayloadRequest,
     getDefaultMcpAccessSettings: (overrideApiKey?: null | string) => Promise<MCPAccessSettings>,
   ) => MCPAccessSettings | Promise<MCPAccessSettings>
+
+  /**
+   * Security middleware configuration.
+   * Configure rate limiting, audit logging, confirmations, undo, and streaming.
+   */
+  security?: SecurityConfig
 
   /**
    * Set the users collection that API keys should be associated with.
