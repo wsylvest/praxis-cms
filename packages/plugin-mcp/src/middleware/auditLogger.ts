@@ -4,7 +4,7 @@
  * Service for logging all MCP tool executions to the audit logs collection.
  */
 
-import type { Payload, PayloadRequest } from 'payload'
+import type { Payload } from 'payload'
 
 import type { AuditLogEntry } from '../collections/createAuditLogsCollection.js'
 

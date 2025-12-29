@@ -80,7 +80,7 @@ export function getEnhancedApiKeyFields(config: ApiKeyEnhancementsConfig = {}): 
           type: 'date',
           admin: {
             date: {
-              displayFormat: 'yyyy-MM-dd HH:mm',
+              displayFormat: 'yyyy-MM-dd HH:mm:ss',
             },
             description: 'When the API key expires (leave empty for no expiration)',
           },

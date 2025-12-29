@@ -381,13 +381,19 @@ export function createConfirmationManager(config: ConfirmationConfig = {}) {
       }
 
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
+
         await fetch(webhookUrl, {
           body: JSON.stringify(body),
           headers,
           method: 'POST',
+          signal: controller.signal,
         })
-      } catch (error) {
-        console.error('[payload-mcp] Failed to send webhook notification:', error)
+
+        clearTimeout(timeoutId)
+      } catch {
+        // Webhook failures are non-blocking - confirmation still created
       }
     },
 

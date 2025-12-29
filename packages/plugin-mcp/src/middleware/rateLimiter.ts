@@ -49,6 +49,7 @@ export interface RateLimitConfig {
 
 export interface RateLimitResult {
   allowed: boolean
+  limit: number
   remaining: number
   resetAt: Date
   retryAfter?: number
@@ -129,6 +130,7 @@ export function createRateLimiter(config: RateLimitConfig) {
       if (skipKeys.includes(apiKeyId)) {
         return {
           allowed: true,
+          limit: maxRequests,
           remaining: maxRequests,
           resetAt: new Date(Date.now() + windowMs),
         }
@@ -158,6 +160,7 @@ export function createRateLimiter(config: RateLimitConfig) {
         if (onRateLimitExceeded) {
           await onRateLimitExceeded(apiKeyId, userId, {
             allowed: false,
+            limit: maxRequests,
             remaining: 0,
             resetAt: new Date(windowEnd),
             retryAfter,
@@ -167,6 +170,7 @@ export function createRateLimiter(config: RateLimitConfig) {
 
         return {
           allowed: false,
+          limit: maxRequests,
           remaining: 0,
           resetAt: new Date(windowEnd),
           retryAfter,
@@ -181,6 +185,7 @@ export function createRateLimiter(config: RateLimitConfig) {
         if (onRateLimitExceeded) {
           await onRateLimitExceeded(apiKeyId, userId, {
             allowed: false,
+            limit: maxRequests,
             remaining,
             resetAt: new Date(windowEnd),
             retryAfter,
@@ -190,6 +195,7 @@ export function createRateLimiter(config: RateLimitConfig) {
 
         return {
           allowed: false,
+          limit: maxRequests,
           remaining,
           resetAt: new Date(windowEnd),
           retryAfter,
@@ -203,6 +209,7 @@ export function createRateLimiter(config: RateLimitConfig) {
 
       return {
         allowed: true,
+        limit: maxRequests,
         remaining: Math.max(0, remaining),
         resetAt: new Date(windowEnd),
         tokensRemaining,
@@ -273,6 +280,7 @@ export function createRateLimiter(config: RateLimitConfig) {
  */
 export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
   const headers: Record<string, string> = {
+    'X-RateLimit-Limit': String(result.limit),
     'X-RateLimit-Remaining': String(result.remaining),
     'X-RateLimit-Reset': result.resetAt.toISOString(),
   }

@@ -145,35 +145,42 @@ export function createToolRegistry() {
       }
 
       // Create loading promise
-      const loadPromise = deferred.loader().then((handler) => {
-        // Create full definition
-        const definition: ToolDefinition = {
-          name: deferred.name,
-          category: deferred.category,
-          collectionSlug: deferred.collectionSlug,
-          description: deferred.description,
-          handler,
-          inputSchema: deferred.inputSchema,
-          metadata: deferred.metadata,
-          operation: deferred.operation,
-        }
+      const loadPromise = deferred
+        .loader()
+        .then((handler) => {
+          // Create full definition
+          const definition: ToolDefinition = {
+            name: deferred.name,
+            category: deferred.category,
+            collectionSlug: deferred.collectionSlug,
+            description: deferred.description,
+            handler,
+            inputSchema: deferred.inputSchema,
+            metadata: deferred.metadata,
+            operation: deferred.operation,
+          }
 
-        // Store as loaded
-        loadedTools.set(name, {
-          definition,
-          lastUsedAt: new Date(),
-          loadedAt: new Date(),
-          usageCount: 0,
+          // Store as loaded
+          loadedTools.set(name, {
+            definition,
+            lastUsedAt: new Date(),
+            loadedAt: new Date(),
+            usageCount: 0,
+          })
+
+          // Remove from deferred
+          deferredTools.delete(name)
+
+          // Clear loading promise
+          loadingPromises.delete(name)
+
+          return handler
         })
-
-        // Remove from deferred
-        deferredTools.delete(name)
-
-        // Clear loading promise
-        loadingPromises.delete(name)
-
-        return handler
-      })
+        .catch((error) => {
+          // Clear loading promise on failure
+          loadingPromises.delete(name)
+          throw error
+        })
 
       loadingPromises.set(name, loadPromise)
       return loadPromise
