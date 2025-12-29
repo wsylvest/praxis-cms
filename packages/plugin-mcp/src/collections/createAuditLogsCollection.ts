@@ -307,6 +307,10 @@ export const createAuditLogsCollection = (): CollectionConfig => {
         fields: ['toolName', 'result'],
       },
     ],
+    labels: {
+      plural: 'Audit Logs',
+      singular: 'Audit Log',
+    },
     timestamps: true,
   }
 }

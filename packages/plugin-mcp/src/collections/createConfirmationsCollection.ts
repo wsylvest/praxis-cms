@@ -197,6 +197,9 @@ export const createConfirmationsCollection = (): CollectionConfig => {
         name: 'approvedAt',
         type: 'date',
         admin: {
+          date: {
+            displayFormat: 'yyyy-MM-dd HH:mm:ss',
+          },
           description: 'When the confirmation was approved',
         },
       },
@@ -213,6 +216,9 @@ export const createConfirmationsCollection = (): CollectionConfig => {
         name: 'deniedAt',
         type: 'date',
         admin: {
+          date: {
+            displayFormat: 'yyyy-MM-dd HH:mm:ss',
+          },
           description: 'When the confirmation was denied',
         },
       },
@@ -258,6 +264,18 @@ export const createConfirmationsCollection = (): CollectionConfig => {
         },
       },
     ],
+    indexes: [
+      {
+        fields: ['userId', 'status'],
+      },
+      {
+        fields: ['status', 'expiresAt'],
+      },
+    ],
+    labels: {
+      plural: 'Confirmations',
+      singular: 'Confirmation',
+    },
     timestamps: true,
   }
 }

@@ -171,6 +171,9 @@ export const createUndoStoreCollection = (): CollectionConfig => {
         name: 'executedAt',
         type: 'date',
         admin: {
+          date: {
+            displayFormat: 'yyyy-MM-dd HH:mm:ss',
+          },
           description: 'When the undo was executed',
         },
       },
@@ -200,6 +203,21 @@ export const createUndoStoreCollection = (): CollectionConfig => {
         },
       },
     ],
+    indexes: [
+      {
+        fields: ['userId', 'undoStatus'],
+      },
+      {
+        fields: ['collectionSlug', 'documentId'],
+      },
+      {
+        fields: ['undoStatus', 'expiresAt'],
+      },
+    ],
+    labels: {
+      plural: 'Undo Entries',
+      singular: 'Undo Entry',
+    },
     timestamps: true,
   }
 }
