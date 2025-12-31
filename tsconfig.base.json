@@ -64,6 +64,12 @@
         "./packages/plugin-import-export/src/exports/rsc.ts"
       ],
       "@payloadcms/plugin-mcp": ["./packages/plugin-mcp/src/index.ts"],
+      "@payloadcms/plugin-ai-admin": ["./packages/plugin-ai-admin/src/index.ts"],
+      "@payloadcms/plugin-ai-admin/components": ["./packages/plugin-ai-admin/src/components/index.ts"],
+      "@payloadcms/plugin-ai-pipelines": ["./packages/plugin-ai-pipelines/src/index.ts"],
+      "@payloadcms/plugin-elevenlabs": ["./packages/plugin-elevenlabs/src/index.ts"],
+      "@payloadcms/plugin-elevenlabs/client": ["./packages/plugin-elevenlabs/src/client.ts"],
+      "@payloadcms/plugin-oauth": ["./packages/plugin-oauth/src/index.ts"],
       "@payloadcms/plugin-multi-tenant/rsc": ["./packages/plugin-multi-tenant/src/exports/rsc.ts"],
       "@payloadcms/plugin-multi-tenant/utilities": [
         "./packages/plugin-multi-tenant/src/exports/utilities.ts"

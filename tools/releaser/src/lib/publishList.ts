@@ -46,13 +46,17 @@ export const packagePublishList = [
 
   // Plugins
   'payload-cloud',
+  'plugin-ai-admin',
+  'plugin-ai-pipelines',
   'plugin-cloud-storage',
   'plugin-ecommerce',
+  'plugin-elevenlabs',
   'plugin-form-builder',
   'plugin-import-export',
   'plugin-mcp',
   'plugin-multi-tenant',
   'plugin-nested-docs',
+  'plugin-oauth',
   'plugin-redirects',
   'plugin-search',
   'plugin-sentry',
