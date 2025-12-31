@@ -1,0 +1,44 @@
+{
+  "name": "@payloadcms/plugin-oauth",
+  "version": "0.1.0",
+  "description": "OAuth/SSO authentication plugin for Payload CMS - supports Google, Microsoft, Okta, Auth0, GitHub, and custom OIDC providers",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "payload": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "payload",
+    "cms",
+    "oauth",
+    "sso",
+    "authentication",
+    "oidc",
+    "saml",
+    "google",
+    "microsoft",
+    "okta",
+    "auth0",
+    "github",
+    "plugin"
+  ],
+  "license": "MIT"
+}
