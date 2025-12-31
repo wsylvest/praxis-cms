@@ -21,6 +21,7 @@ Payload is a monorepo structured around Next.js, containing the core CMS platfor
   - `packages/plugin-*` - Additional functionality plugins
   - `packages/graphql` - GraphQL API layer
   - `packages/translations` - i18n translations
+  - `packages/sdk` - TypeScript SDK for Payload API
 - `test/` - Test suites organized by feature area. Each directory contains a granular Payload config and test files
 - `docs/` - Documentation (deployed to payloadcms.com)
 - `tools/` - Monorepo tooling
@@ -102,6 +103,19 @@ test/<feature-name>/
 ```
 
 Generate types for a test directory: `pnpm run dev:generate-types <directory_name>`
+
+### Running Single Tests
+
+```bash
+# Run a specific test file
+pnpm run test:int -- test/fields/int.spec.ts
+
+# Filter tests by name pattern
+pnpm run test:int -- --testNamePattern "pattern"
+
+# Run with specific database
+pnpm run test:int:postgres -- test/fields/int.spec.ts
+```
 
 ## Linting & Formatting
 
