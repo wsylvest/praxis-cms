@@ -17,16 +17,16 @@ import {
   createStreamingChatEndpoint,
 } from './endpoints/index.js'
 
+export { AIController, createAIController } from './controller/AIController.js'
+export { createAuditLogger, RateLimiter, SecurityManager } from './middleware/index.js'
+export { ClaudeProvider, GeminiProvider, OpenAIProvider, ProviderManager } from './providers/index.js'
+export { createCollectionTools, ToolRegistry } from './tools/registry.js'
 export * from './types/index.js'
-export { ProviderManager, ClaudeProvider, OpenAIProvider, GeminiProvider } from './providers/index.js'
-export { SecurityManager, RateLimiter, createAuditLogger } from './middleware/index.js'
-export { ToolRegistry, createCollectionTools } from './tools/registry.js'
-export { createAIController, AIController } from './controller/AIController.js'
-export { SessionManager, ConfirmationManager, createUndoManager } from './utils/index.js'
+export { ConfirmationManager, createUndoManager, SessionManager } from './utils/index.js'
 
 
 // Singleton controller reference
-let controllerInstance: ReturnType<typeof createAIController> | null = null
+let controllerInstance: null | ReturnType<typeof createAIController> = null
 
 /**
  * AI Admin Plugin for Payload CMS
@@ -119,8 +119,8 @@ export const aiAdminPlugin =
 
       // Initialize AI controller
       controllerInstance = createAIController({
-        pluginConfig,
         payload,
+        pluginConfig,
       })
 
       payload.logger.info('[ai-admin] Plugin initialized')
@@ -129,8 +129,6 @@ export const aiAdminPlugin =
     // Add endpoints
     config.endpoints.push(
       {
-        path: '/ai/chat',
-        method: 'post',
         handler: async (req) => {
           if (!controllerInstance) {
             return Response.json(
@@ -140,10 +138,10 @@ export const aiAdminPlugin =
           }
           return createChatEndpoint(controllerInstance)(req)
         },
+        method: 'post',
+        path: '/ai/chat',
       },
       {
-        path: '/ai/chat/stream',
-        method: 'post',
         handler: async (req) => {
           if (!controllerInstance) {
             return Response.json(
@@ -153,10 +151,10 @@ export const aiAdminPlugin =
           }
           return createStreamingChatEndpoint(controllerInstance)(req)
         },
+        method: 'post',
+        path: '/ai/chat/stream',
       },
       {
-        path: '/ai/confirmation',
-        method: 'post',
         handler: async (req) => {
           if (!controllerInstance) {
             return Response.json(
@@ -166,23 +164,23 @@ export const aiAdminPlugin =
           }
           return createConfirmationEndpoint(controllerInstance)(req)
         },
+        method: 'post',
+        path: '/ai/confirmation',
       },
       {
-        path: '/ai/session',
+        handler: async (req) => {
+          if (!controllerInstance) {
+            return Response.json(
+              { error: 'AI controller not initialized' },
+              { status: 500 }
+            )
+          }
+          return createSessionEndpoint(controllerInstance)(req)
+        },
         method: 'get',
-        handler: async (req) => {
-          if (!controllerInstance) {
-            return Response.json(
-              { error: 'AI controller not initialized' },
-              { status: 500 }
-            )
-          }
-          return createSessionEndpoint(controllerInstance)(req)
-        },
+        path: '/ai/session',
       },
       {
-        path: '/ai/session',
-        method: 'patch',
         handler: async (req) => {
           if (!controllerInstance) {
             return Response.json(
@@ -192,6 +190,8 @@ export const aiAdminPlugin =
           }
           return createSessionEndpoint(controllerInstance)(req)
         },
+        method: 'patch',
+        path: '/ai/session',
       }
     )
 
@@ -218,7 +218,7 @@ export const aiAdminPlugin =
  * Get the AI controller instance
  * Useful for custom integrations
  */
-export function getAIController(): ReturnType<typeof createAIController> | null {
+export function getAIController(): null | ReturnType<typeof createAIController> {
   return controllerInstance
 }
 

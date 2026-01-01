@@ -1,6 +1,7 @@
 import type { PayloadHandler } from 'payload'
 
 import type { AIController } from '../controller/AIController.js'
+
 import { getRateLimitHeaders } from '../middleware/rateLimiter.js'
 
 /**
@@ -11,7 +12,7 @@ export function createChatEndpoint(controller: AIController): PayloadHandler {
     try {
       // Parse request body
       const body = await req.json?.() || {}
-      const { message, sessionId, conversationId, provider } = body
+      const { conversationId, message, provider, sessionId } = body
 
       if (!message || typeof message !== 'string') {
         return Response.json(
@@ -22,9 +23,9 @@ export function createChatEndpoint(controller: AIController): PayloadHandler {
 
       // Process chat
       const response = await controller.chat(req, message, {
-        sessionId,
         conversationId,
         provider,
+        sessionId,
       })
 
       return Response.json({
@@ -68,7 +69,7 @@ export function createStreamingChatEndpoint(controller: AIController): PayloadHa
     try {
       // Parse request body
       const body = await req.json?.() || {}
-      const { message, sessionId, conversationId, provider } = body
+      const { conversationId, message, provider, sessionId } = body
 
       if (!message || typeof message !== 'string') {
         return Response.json(
@@ -84,9 +85,9 @@ export function createStreamingChatEndpoint(controller: AIController): PayloadHa
 
           try {
             const generator = controller.streamChat(req, message, {
-              sessionId,
               conversationId,
               provider,
+              sessionId,
             })
 
             for await (const event of generator) {
@@ -112,9 +113,9 @@ export function createStreamingChatEndpoint(controller: AIController): PayloadHa
 
       return new Response(stream, {
         headers: {
-          'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
+          'Content-Type': 'text/event-stream',
         },
       })
     } catch (error) {
@@ -135,7 +136,7 @@ export function createConfirmationEndpoint(controller: AIController): PayloadHan
   return async (req) => {
     try {
       const body = await req.json?.() || {}
-      const { confirmationId, action } = body
+      const { action, confirmationId } = body
 
       if (!confirmationId || !action) {
         return Response.json(
@@ -164,7 +165,7 @@ export function createConfirmationEndpoint(controller: AIController): PayloadHan
         )
       }
 
-      return Response.json({ success: true, action })
+      return Response.json({ action, success: true })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Internal error'
       console.error('Confirmation error:', error)
@@ -206,8 +207,8 @@ export function createSessionEndpoint(controller: AIController): PayloadHandler 
         const pendingConfirmations = controller.getPendingConfirmations(sessionId)
 
         return Response.json({
-          session,
           pendingConfirmations,
+          session,
         })
       }
 
@@ -221,12 +222,12 @@ export function createSessionEndpoint(controller: AIController): PayloadHandler 
         }
 
         const body = await req.json?.() || {}
-        const { currentCollection, selectedDocuments, metadata } = body
+        const { currentCollection, metadata, selectedDocuments } = body
 
         const updated = controller.updateSession(sessionId, {
           currentCollection,
-          selectedDocuments,
           metadata,
+          selectedDocuments,
         })
 
         if (!updated) {

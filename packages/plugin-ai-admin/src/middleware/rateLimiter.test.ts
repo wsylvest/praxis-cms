@@ -1,11 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
 import { RateLimiter } from './rateLimiter.js'
 
 // Mock PayloadRequest for testing
 const createMockRequest = (userId?: string, ip?: string) => ({
   headers: new Map([
-    ['x-forwarded-for', ip || '127.0.0.1'],
     ['authorization', ''],
+    ['x-forwarded-for', ip || '127.0.0.1'],
   ]) as unknown as Headers,
   user: userId ? { id: userId } : undefined,
 } as any)
@@ -15,9 +16,9 @@ describe('RateLimiter', () => {
 
   beforeEach(() => {
     rateLimiter = new RateLimiter({
-      windowMs: 60000, // 1 minute
       maxRequests: 10,
       maxTokensPerWindow: 1000,
+      windowMs: 60000, // 1 minute
     })
   })
 

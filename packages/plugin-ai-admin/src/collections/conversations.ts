@@ -9,40 +9,36 @@ export const createConversationsCollection = (
 ): CollectionConfig => {
   const config: CollectionConfig = {
     slug: 'ai-admin-conversations',
-    labels: {
-      singular: 'Conversation',
-      plural: 'Conversations',
-    },
-    admin: {
-      group: 'AI Admin',
-      description: 'AI conversation history with multi-turn memory',
-      defaultColumns: ['title', 'user', 'messageCount', 'updatedAt'],
-      useAsTitle: 'title',
-    },
     access: {
       // Users can only read their own conversations
-      read: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
-        return {
-          user: { equals: req.user.id },
-        }
-      },
       create: ({ req }) => !!req.user,
-      update: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
-        return {
-          user: { equals: req.user.id },
-        }
-      },
       delete: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
         return {
           user: { equals: req.user.id },
         }
       },
+      read: ({ req }) => {
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
+        return {
+          user: { equals: req.user.id },
+        }
+      },
+      update: ({ req }) => {
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
+        return {
+          user: { equals: req.user.id },
+        }
+      },
+    },
+    admin: {
+      defaultColumns: ['title', 'user', 'messageCount', 'updatedAt'],
+      description: 'AI conversation history with multi-turn memory',
+      group: 'AI Admin',
+      useAsTitle: 'title',
     },
     fields: [
       {
@@ -55,60 +51,60 @@ export const createConversationsCollection = (
       {
         name: 'user',
         type: 'relationship',
-        relationTo: 'users',
-        required: true,
         admin: {
           description: 'User who owns this conversation',
         },
+        relationTo: 'users',
+        required: true,
       },
       {
         name: 'sessionId',
         type: 'text',
-        required: true,
         admin: {
           description: 'Session identifier',
         },
         index: true,
+        required: true,
       },
       {
         name: 'provider',
         type: 'select',
+        admin: {
+          description: 'AI provider used for this conversation',
+        },
+        defaultValue: 'claude',
         options: [
           { label: 'Claude', value: 'claude' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Gemini', value: 'gemini' },
           { label: 'Grok', value: 'grok' },
         ],
-        defaultValue: 'claude',
-        admin: {
-          description: 'AI provider used for this conversation',
-        },
       },
       {
         name: 'messages',
         type: 'json',
-        required: true,
-        defaultValue: [],
         admin: {
           description: 'Array of conversation messages',
         },
+        defaultValue: [],
+        required: true,
       },
       {
         name: 'messageCount',
         type: 'number',
-        defaultValue: 0,
         admin: {
           description: 'Total number of messages',
           readOnly: true,
         },
+        defaultValue: 0,
       },
       {
         name: 'toolHistory',
         type: 'json',
-        defaultValue: [],
         admin: {
           description: 'History of tool executions in this conversation',
         },
+        defaultValue: [],
       },
       {
         name: 'context',
@@ -127,18 +123,18 @@ export const createConversationsCollection = (
           {
             name: 'documentIds',
             type: 'json',
-            defaultValue: [],
             admin: {
               description: 'Selected document IDs',
             },
+            defaultValue: [],
           },
           {
             name: 'metadata',
             type: 'json',
-            defaultValue: {},
             admin: {
               description: 'Additional context metadata',
             },
+            defaultValue: {},
           },
         ],
       },
@@ -169,17 +165,16 @@ export const createConversationsCollection = (
       {
         name: 'status',
         type: 'select',
+        admin: {
+          description: 'Conversation status',
+        },
+        defaultValue: 'active',
         options: [
           { label: 'Active', value: 'active' },
           { label: 'Archived', value: 'archived' },
         ],
-        defaultValue: 'active',
-        admin: {
-          description: 'Conversation status',
-        },
       },
     ],
-    timestamps: true,
     hooks: {
       beforeChange: [
         ({ data, operation }) => {
@@ -204,6 +199,11 @@ export const createConversationsCollection = (
         },
       ],
     },
+    labels: {
+      plural: 'Conversations',
+      singular: 'Conversation',
+    },
+    timestamps: true,
   }
 
   return override ? override(config) : config

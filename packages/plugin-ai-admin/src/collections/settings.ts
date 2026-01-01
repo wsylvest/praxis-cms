@@ -7,11 +7,6 @@ import type { GlobalConfig } from 'payload'
 export const createSettingsGlobal = (): GlobalConfig => {
   return {
     slug: 'ai-admin-settings',
-    label: 'AI Settings',
-    admin: {
-      group: 'AI Admin',
-      description: 'Configure AI admin plugin settings',
-    },
     access: {
       read: ({ req }) => {
         return (req.user as any)?.role === 'admin'
@@ -20,26 +15,29 @@ export const createSettingsGlobal = (): GlobalConfig => {
         return (req.user as any)?.role === 'admin'
       },
     },
+    admin: {
+      description: 'Configure AI admin plugin settings',
+      group: 'AI Admin',
+    },
     fields: [
       {
         type: 'tabs',
         tabs: [
           {
-            label: 'Providers',
             fields: [
               {
                 name: 'defaultProvider',
                 type: 'select',
+                admin: {
+                  description: 'Default AI provider for new conversations',
+                },
+                defaultValue: 'claude',
                 options: [
                   { label: 'Claude (Anthropic)', value: 'claude' },
                   { label: 'GPT-4 (OpenAI)', value: 'openai' },
                   { label: 'Gemini (Google)', value: 'gemini' },
                   { label: 'Grok (xAI)', value: 'grok' },
                 ],
-                defaultValue: 'claude',
-                admin: {
-                  description: 'Default AI provider for new conversations',
-                },
               },
               {
                 name: 'providers',
@@ -48,7 +46,6 @@ export const createSettingsGlobal = (): GlobalConfig => {
                   {
                     name: 'claude',
                     type: 'group',
-                    label: 'Claude (Anthropic)',
                     fields: [
                       {
                         name: 'enabled',
@@ -65,19 +62,19 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'model',
                         type: 'select',
+                        defaultValue: 'claude-sonnet-4-20250514',
                         options: [
                           { label: 'Claude Opus 4', value: 'claude-opus-4-20250514' },
                           { label: 'Claude Sonnet 4', value: 'claude-sonnet-4-20250514' },
                           { label: 'Claude 3.5 Haiku', value: 'claude-3-5-haiku-20241022' },
                         ],
-                        defaultValue: 'claude-sonnet-4-20250514',
                       },
                     ],
+                    label: 'Claude (Anthropic)',
                   },
                   {
                     name: 'openai',
                     type: 'group',
-                    label: 'OpenAI',
                     fields: [
                       {
                         name: 'enabled',
@@ -94,19 +91,19 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'model',
                         type: 'select',
+                        defaultValue: 'gpt-4o',
                         options: [
                           { label: 'GPT-4o', value: 'gpt-4o' },
                           { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
                           { label: 'GPT-4 Turbo', value: 'gpt-4-turbo' },
                         ],
-                        defaultValue: 'gpt-4o',
                       },
                     ],
+                    label: 'OpenAI',
                   },
                   {
                     name: 'gemini',
                     type: 'group',
-                    label: 'Google Gemini',
                     fields: [
                       {
                         name: 'enabled',
@@ -123,19 +120,19 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'model',
                         type: 'select',
+                        defaultValue: 'gemini-1.5-pro',
                         options: [
                           { label: 'Gemini 2.0 Flash', value: 'gemini-2.0-flash-exp' },
                           { label: 'Gemini 1.5 Pro', value: 'gemini-1.5-pro' },
                           { label: 'Gemini 1.5 Flash', value: 'gemini-1.5-flash' },
                         ],
-                        defaultValue: 'gemini-1.5-pro',
                       },
                     ],
+                    label: 'Google Gemini',
                   },
                   {
                     name: 'grok',
                     type: 'group',
-                    label: 'Grok (xAI)',
                     fields: [
                       {
                         name: 'enabled',
@@ -152,20 +149,21 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'model',
                         type: 'select',
+                        defaultValue: 'grok-2',
                         options: [
                           { label: 'Grok 2', value: 'grok-2' },
                           { label: 'Grok 2 Mini', value: 'grok-2-mini' },
                         ],
-                        defaultValue: 'grok-2',
                       },
                     ],
+                    label: 'Grok (xAI)',
                   },
                 ],
               },
             ],
+            label: 'Providers',
           },
           {
-            label: 'Security',
             fields: [
               {
                 name: 'security',
@@ -174,10 +172,10 @@ export const createSettingsGlobal = (): GlobalConfig => {
                   {
                     name: 'requireAuth',
                     type: 'checkbox',
-                    defaultValue: true,
                     admin: {
                       description: 'Require authentication for AI features',
                     },
+                    defaultValue: true,
                   },
                   {
                     name: 'rateLimiting',
@@ -191,26 +189,26 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'windowMs',
                         type: 'number',
-                        defaultValue: 60000,
                         admin: {
                           description: 'Rate limit window in milliseconds',
                         },
+                        defaultValue: 60000,
                       },
                       {
                         name: 'maxRequests',
                         type: 'number',
-                        defaultValue: 100,
                         admin: {
                           description: 'Max requests per window',
                         },
+                        defaultValue: 100,
                       },
                       {
                         name: 'maxTokens',
                         type: 'number',
-                        defaultValue: 100000,
                         admin: {
                           description: 'Max tokens per window',
                         },
+                        defaultValue: 100000,
                       },
                     ],
                   },
@@ -226,37 +224,37 @@ export const createSettingsGlobal = (): GlobalConfig => {
                       {
                         name: 'allowedIPs',
                         type: 'array',
+                        admin: {
+                          description: 'Allowed IP addresses',
+                        },
                         fields: [
                           {
                             name: 'ip',
                             type: 'text',
                           },
                         ],
-                        admin: {
-                          description: 'Allowed IP addresses',
-                        },
                       },
                       {
                         name: 'allowedCIDRs',
                         type: 'array',
+                        admin: {
+                          description: 'Allowed CIDR ranges (e.g., 192.168.1.0/24)',
+                        },
                         fields: [
                           {
                             name: 'cidr',
                             type: 'text',
                           },
                         ],
-                        admin: {
-                          description: 'Allowed CIDR ranges (e.g., 192.168.1.0/24)',
-                        },
                       },
                     ],
                   },
                 ],
               },
             ],
+            label: 'Security',
           },
           {
-            label: 'Confirmations',
             fields: [
               {
                 name: 'confirmations',
@@ -265,56 +263,56 @@ export const createSettingsGlobal = (): GlobalConfig => {
                   {
                     name: 'destructiveActions',
                     type: 'select',
+                    admin: {
+                      description: 'Confirmation level for delete operations',
+                    },
+                    defaultValue: 'modal',
                     options: [
                       { label: 'None', value: 'none' },
                       { label: 'Inline', value: 'inline' },
                       { label: 'Modal', value: 'modal' },
                     ],
-                    defaultValue: 'modal',
-                    admin: {
-                      description: 'Confirmation level for delete operations',
-                    },
                   },
                   {
                     name: 'bulkOperations',
                     type: 'select',
+                    admin: {
+                      description: 'Confirmation level for bulk operations',
+                    },
+                    defaultValue: 'modal',
                     options: [
                       { label: 'None', value: 'none' },
                       { label: 'Inline', value: 'inline' },
                       { label: 'Modal', value: 'modal' },
                     ],
-                    defaultValue: 'modal',
-                    admin: {
-                      description: 'Confirmation level for bulk operations',
-                    },
                   },
                   {
                     name: 'configChanges',
                     type: 'select',
+                    admin: {
+                      description: 'Confirmation level for config changes',
+                    },
+                    defaultValue: 'modal',
                     options: [
                       { label: 'None', value: 'none' },
                       { label: 'Inline', value: 'inline' },
                       { label: 'Modal', value: 'modal' },
                     ],
-                    defaultValue: 'modal',
-                    admin: {
-                      description: 'Confirmation level for config changes',
-                    },
                   },
                   {
                     name: 'timeoutSeconds',
                     type: 'number',
-                    defaultValue: 60,
                     admin: {
                       description: 'Confirmation timeout in seconds',
                     },
+                    defaultValue: 60,
                   },
                 ],
               },
             ],
+            label: 'Confirmations',
           },
           {
-            label: 'Undo/Rollback',
             fields: [
               {
                 name: 'undo',
@@ -323,33 +321,33 @@ export const createSettingsGlobal = (): GlobalConfig => {
                   {
                     name: 'enabled',
                     type: 'checkbox',
-                    defaultValue: true,
                     admin: {
                       description: 'Enable undo/rollback functionality',
                     },
+                    defaultValue: true,
                   },
                   {
                     name: 'retentionHours',
                     type: 'number',
-                    defaultValue: 24,
                     admin: {
                       description: 'How long to keep undo history (hours)',
                     },
+                    defaultValue: 24,
                   },
                   {
                     name: 'maxActionsPerSession',
                     type: 'number',
-                    defaultValue: 50,
                     admin: {
                       description: 'Max undoable actions per session',
                     },
+                    defaultValue: 50,
                   },
                 ],
               },
             ],
+            label: 'Undo/Rollback',
           },
           {
-            label: 'UI',
             fields: [
               {
                 name: 'ui',
@@ -358,46 +356,48 @@ export const createSettingsGlobal = (): GlobalConfig => {
                   {
                     name: 'chatPosition',
                     type: 'select',
+                    admin: {
+                      description: 'Where to show the AI chat panel',
+                    },
+                    defaultValue: 'sidebar',
                     options: [
                       { label: 'Sidebar', value: 'sidebar' },
                       { label: 'Drawer', value: 'drawer' },
                       { label: 'Modal', value: 'modal' },
                     ],
-                    defaultValue: 'sidebar',
-                    admin: {
-                      description: 'Where to show the AI chat panel',
-                    },
                   },
                   {
                     name: 'showInNav',
                     type: 'checkbox',
-                    defaultValue: true,
                     admin: {
                       description: 'Show AI chat in navigation',
                     },
+                    defaultValue: true,
                   },
                   {
                     name: 'defaultOpen',
                     type: 'checkbox',
-                    defaultValue: false,
                     admin: {
                       description: 'Open chat panel by default',
                     },
+                    defaultValue: false,
                   },
                   {
                     name: 'enableStreaming',
                     type: 'checkbox',
-                    defaultValue: true,
                     admin: {
                       description: 'Enable streaming responses',
                     },
+                    defaultValue: true,
                   },
                 ],
               },
             ],
+            label: 'UI',
           },
         ],
       },
     ],
+    label: 'AI Settings',
   }
 }

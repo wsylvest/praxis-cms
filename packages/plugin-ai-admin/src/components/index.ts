@@ -1,1 +1,1 @@
-export { AIChatPanel, default as AIChatPanelDefault } from './AIChatPanel.js'
+export { AIChatPanel } from './AIChatPanel.js'

@@ -19,42 +19,19 @@ export abstract class BaseAIProvider {
     this.config = config
   }
 
-  abstract get name(): string
-  abstract get supportedModels(): string[]
-
-  /**
-   * Initialize the provider (validate API key, setup client)
-   */
-  abstract initialize(): Promise<void>
-
   /**
    * Generate a completion (non-streaming)
    */
   abstract complete(options: AICompletionOptions): Promise<AICompletionResponse>
-
-  /**
-   * Generate a streaming completion
-   */
-  abstract stream(
-    options: AICompletionOptions
-  ): AsyncGenerator<AIStreamEvent, void, unknown>
-
-  /**
-   * Convert tools to provider-specific format
-   */
-  abstract formatTools(tools: AITool[]): unknown
-
   /**
    * Convert messages to provider-specific format
    */
   abstract formatMessages(messages: AIMessage[]): unknown
 
   /**
-   * Check if the provider is properly configured
+   * Convert tools to provider-specific format
    */
-  isConfigured(): boolean {
-    return !!this.config.apiKey || !!this.config.baseURL
-  }
+  abstract formatTools(tools: AITool[]): unknown
 
   /**
    * Get the default model for this provider
@@ -64,9 +41,28 @@ export abstract class BaseAIProvider {
   }
 
   /**
+   * Initialize the provider (validate API key, setup client)
+   */
+  abstract initialize(): Promise<void>
+
+  /**
+   * Check if the provider is properly configured
+   */
+  isConfigured(): boolean {
+    return !!this.config.apiKey || !!this.config.baseURL
+  }
+
+  /**
+   * Generate a streaming completion
+   */
+  abstract stream(
+    options: AICompletionOptions
+  ): AsyncGenerator<AIStreamEvent, void, unknown>
+
+  /**
    * Validate the configuration
    */
-  validate(): { valid: boolean; errors: string[] } {
+  validate(): { errors: string[]; valid: boolean } {
     const errors: string[] = []
 
     if (!this.config.apiKey && !this.config.baseURL) {
@@ -79,21 +75,25 @@ export abstract class BaseAIProvider {
       )
     }
 
-    return { valid: errors.length === 0, errors }
+    return { errors, valid: errors.length === 0 }
   }
+
+  abstract get name(): string
+
+  abstract get supportedModels(): string[]
 }
 
 /**
  * Standard interface for tool definitions across providers
  */
 export interface StandardToolDefinition {
-  name: string
   description: string
   inputSchema: {
-    type: 'object'
     properties: Record<string, unknown>
     required?: string[]
+    type: 'object'
   }
+  name: string
 }
 
 /**
@@ -104,18 +104,27 @@ export function zodToJsonSchema(schema: unknown): Record<string, unknown> {
     const def = (schema as any)._def
 
     switch (def.typeName) {
-      case 'ZodString':
-        return { type: 'string', description: def.description }
-      case 'ZodNumber':
-        return { type: 'number', description: def.description }
-      case 'ZodBoolean':
-        return { type: 'boolean', description: def.description }
       case 'ZodArray':
         return {
           type: 'array',
-          items: zodToJsonSchema(def.type),
           description: def.description,
+          items: zodToJsonSchema(def.type),
         }
+      case 'ZodBoolean':
+        return { type: 'boolean', description: def.description }
+      case 'ZodDefault':
+        return {
+          ...zodToJsonSchema(def.innerType),
+          default: def.defaultValue(),
+        }
+      case 'ZodEnum':
+        return {
+          type: 'string',
+          description: def.description,
+          enum: def.values,
+        }
+      case 'ZodNumber':
+        return { type: 'number', description: def.description }
       case 'ZodObject': {
         const properties: Record<string, unknown> = {}
         const required: string[] = []
@@ -129,24 +138,15 @@ export function zodToJsonSchema(schema: unknown): Record<string, unknown> {
 
         return {
           type: 'object',
+          description: def.description,
           properties,
           required: required.length > 0 ? required : undefined,
-          description: def.description,
         }
       }
-      case 'ZodEnum':
-        return {
-          type: 'string',
-          enum: def.values,
-          description: def.description,
-        }
       case 'ZodOptional':
         return zodToJsonSchema(def.innerType)
-      case 'ZodDefault':
-        return {
-          ...zodToJsonSchema(def.innerType),
-          default: def.defaultValue(),
-        }
+      case 'ZodString':
+        return { type: 'string', description: def.description }
       default:
         return { type: 'string' }
     }

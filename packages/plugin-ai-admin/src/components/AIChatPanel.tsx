@@ -5,16 +5,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { AIMessage, AIStreamEvent, PendingConfirmation } from '../types/index.js'
 
 interface AIChatPanelProps {
-  position?: 'sidebar' | 'drawer' | 'modal'
+  baseURL?: string
   defaultOpen?: boolean
   onClose?: () => void
-  baseURL?: string
+  position?: 'drawer' | 'modal' | 'sidebar'
 }
 
 interface Message extends AIMessage {
+  error?: string
   id: string
   isStreaming?: boolean
-  error?: string
 }
 
 /**
@@ -22,18 +22,18 @@ interface Message extends AIMessage {
  * Provides a chat interface for AI-powered CMS administration
  */
 export const AIChatPanel: React.FC<AIChatPanelProps> = ({
-  position = 'sidebar',
+  baseURL = '/api',
   defaultOpen = false,
   onClose,
-  baseURL = '/api',
+  position = 'sidebar',
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [sessionId, _setSessionId] = useState<null | string>(null)
+  const [pendingConfirmation, setPendingConfirmation] = useState<null | PendingConfirmation>(null)
+  const [error, setError] = useState<null | string>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -56,12 +56,12 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
   }, [onClose])
 
   const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading) {return}
 
     const userMessage: Message = {
       id: `msg_${Date.now()}`,
-      role: 'user',
       content: input.trim(),
+      role: 'user',
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -73,24 +73,24 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     const assistantMessageId = `msg_${Date.now()}_assistant`
     const assistantMessage: Message = {
       id: assistantMessageId,
-      role: 'assistant',
       content: '',
       isStreaming: true,
+      role: 'assistant',
     }
     setMessages((prev) => [...prev, assistantMessage])
 
     try {
       // Use streaming endpoint
       const response = await fetch(`${baseURL}/ai/chat/stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           message: userMessage.content,
           sessionId,
         }),
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
       })
 
       if (!response.ok) {
@@ -109,7 +109,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
 
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {break}
 
         const chunk = decoder.decode(value, { stream: true })
         const lines = chunk.split('\n')
@@ -167,7 +167,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
               } else if (event.type === 'error') {
                 throw new Error(event.error || 'Stream error')
               }
-            } catch (parseError) {
+            } catch (_parseError) {
               // Skip invalid JSON
             }
           }
@@ -181,7 +181,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMessageId
-            ? { ...m, isStreaming: false, error: errorMessage }
+            ? { ...m, error: errorMessage, isStreaming: false }
             : m
         )
       )
@@ -192,19 +192,19 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
 
   const handleConfirmation = useCallback(
     async (action: 'approve' | 'deny') => {
-      if (!pendingConfirmation) return
+      if (!pendingConfirmation) {return}
 
       try {
         const response = await fetch(`${baseURL}/ai/confirmation`, {
-          method: 'POST',
+          body: JSON.stringify({
+            action,
+            confirmationId: pendingConfirmation.id,
+          }),
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
-          body: JSON.stringify({
-            confirmationId: pendingConfirmation.id,
-            action,
-          }),
+          method: 'POST',
         })
 
         if (!response.ok) {
@@ -225,7 +225,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
-        sendMessage()
+        void sendMessage()
       }
     },
     [sendMessage]
@@ -237,7 +237,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       {/* Header */}
       <div className="ai-chat-header">
         <h3>AI Assistant</h3>
-        <button onClick={handleClose} className="ai-chat-close">
+        <button className="ai-chat-close" onClick={handleClose} type="button">
           &times;
         </button>
       </div>
@@ -257,8 +257,8 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
 
         {messages.map((message) => (
           <div
-            key={message.id}
             className={`ai-chat-message ai-chat-message-${message.role}`}
+            key={message.id}
           >
             <div className="ai-chat-message-content">
               {message.content}
@@ -281,14 +281,16 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           <p>{pendingConfirmation.message}</p>
           <div className="ai-chat-confirmation-actions">
             <button
-              onClick={() => handleConfirmation('approve')}
               className="ai-chat-btn-approve"
+              onClick={() => void handleConfirmation('approve')}
+              type="button"
             >
               Approve
             </button>
             <button
-              onClick={() => handleConfirmation('deny')}
               className="ai-chat-btn-deny"
+              onClick={() => void handleConfirmation('deny')}
+              type="button"
             >
               Cancel
             </button>
@@ -300,26 +302,28 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       {error && (
         <div className="ai-chat-error-banner">
           {error}
-          <button onClick={() => setError(null)}>&times;</button>
+          <button onClick={() => setError(null)} type="button">&times;</button>
         </div>
       )}
 
       {/* Input */}
       <div className="ai-chat-input-container">
         <textarea
-          ref={inputRef}
-          value={input}
+          aria-label="Chat message input"
+          className="ai-chat-input"
+          disabled={isLoading}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
-          disabled={isLoading}
+          ref={inputRef}
           rows={1}
-          className="ai-chat-input"
+          value={input}
         />
         <button
-          onClick={sendMessage}
-          disabled={isLoading || !input.trim()}
           className="ai-chat-send"
+          disabled={isLoading || !input.trim()}
+          onClick={() => void sendMessage()}
+          type="button"
         >
           {isLoading ? '...' : 'Send'}
         </button>
@@ -330,9 +334,10 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
         className="ai-chat-toggle"
+        onClick={() => setIsOpen(true)}
         title="Open AI Assistant"
+        type="button"
       >
         AI
       </button>
@@ -341,10 +346,17 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
 
   if (position === 'modal') {
     return (
-      <div className="ai-chat-modal-overlay" onClick={handleClose}>
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+      <div
+        className="ai-chat-modal-overlay"
+        onClick={handleClose}
+      >
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
         <div
+          aria-modal="true"
           className="ai-chat-modal"
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
         >
           {panelContent}
         </div>
@@ -359,5 +371,3 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
   // Default: sidebar
   return <div className="ai-chat-sidebar">{panelContent}</div>
 }
-
-export default AIChatPanel

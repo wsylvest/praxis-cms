@@ -7,9 +7,9 @@ import type { IPAllowlistConfig } from '../types/index.js'
  * Restricts access based on IP address or CIDR ranges
  */
 export class IPAllowlist {
-  private config: IPAllowlistConfig
-  private allowedIPs: Set<string>
   private allowedCIDRs: CIDR[]
+  private allowedIPs: Set<string>
+  private config: IPAllowlistConfig
 
   constructor(config: IPAllowlistConfig) {
     this.config = config
@@ -34,6 +34,31 @@ export class IPAllowlist {
 
     // Fallback
     return 'unknown'
+  }
+
+  /**
+   * Add a CIDR range to the allowlist
+   */
+  addCIDR(cidr: string): void {
+    this.allowedCIDRs.push(new CIDR(cidr))
+  }
+
+  /**
+   * Add an IP to the allowlist
+   */
+  addIP(ip: string): void {
+    this.allowedIPs.add(ip)
+  }
+
+  /**
+   * Get current allowlist configuration
+   */
+  getConfig(): IPAllowlistConfig {
+    return {
+      ...this.config,
+      allowedCIDRs: this.allowedCIDRs.map((c) => c.toString()),
+      allowedIPs: Array.from(this.allowedIPs),
+    }
   }
 
   /**
@@ -68,35 +93,10 @@ export class IPAllowlist {
   }
 
   /**
-   * Add an IP to the allowlist
-   */
-  addIP(ip: string): void {
-    this.allowedIPs.add(ip)
-  }
-
-  /**
    * Remove an IP from the allowlist
    */
   removeIP(ip: string): void {
     this.allowedIPs.delete(ip)
-  }
-
-  /**
-   * Add a CIDR range to the allowlist
-   */
-  addCIDR(cidr: string): void {
-    this.allowedCIDRs.push(new CIDR(cidr))
-  }
-
-  /**
-   * Get current allowlist configuration
-   */
-  getConfig(): IPAllowlistConfig {
-    return {
-      ...this.config,
-      allowedIPs: Array.from(this.allowedIPs),
-      allowedCIDRs: this.allowedCIDRs.map((c) => c.toString()),
-    }
   }
 }
 
@@ -104,9 +104,9 @@ export class IPAllowlist {
  * CIDR range helper class
  */
 class CIDR {
+  private cidrString: string
   private ip: number
   private mask: number
-  private cidrString: string
 
   constructor(cidr: string) {
     this.cidrString = cidr
@@ -143,29 +143,29 @@ export function createIPAllowlist(config: IPAllowlistConfig): IPAllowlist {
 export const IPAllowlistPresets = {
   /** Allow localhost only */
   localhost: {
-    enabled: true,
-    allowedIPs: ['127.0.0.1', '::1'],
     allowedCIDRs: [],
+    allowedIPs: ['127.0.0.1', '::1'],
     denyByDefault: true,
+    enabled: true,
   },
 
   /** Allow private networks */
   privateNetworks: {
-    enabled: true,
-    allowedIPs: ['127.0.0.1', '::1'],
     allowedCIDRs: [
       '10.0.0.0/8',
       '172.16.0.0/12',
       '192.168.0.0/16',
     ],
+    allowedIPs: ['127.0.0.1', '::1'],
     denyByDefault: true,
+    enabled: true,
   },
 
   /** Disabled (allow all) */
   disabled: {
-    enabled: false,
-    allowedIPs: [],
     allowedCIDRs: [],
+    allowedIPs: [],
     denyByDefault: false,
+    enabled: false,
   },
 } as const

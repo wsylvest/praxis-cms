@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { ConfirmationManager } from './confirmationManager.js'
 
 describe('ConfirmationManager', () => {
@@ -6,9 +7,9 @@ describe('ConfirmationManager', () => {
 
   beforeEach(() => {
     manager = new ConfirmationManager({
-      destructiveActions: 'modal',
       bulkOperations: 'modal',
       configChanges: 'modal',
+      destructiveActions: 'modal',
       timeoutSeconds: 60,
     })
   })
@@ -100,9 +101,9 @@ describe('ConfirmationManager', () => {
   })
 
   describe('getPending', () => {
-    it('should only return pending confirmations for the session', async () => {
+    it('should only return pending confirmations for the session', () => {
       // Create confirmation for session-1
-      manager.requestConfirmation(
+      void manager.requestConfirmation(
         'session-1',
         'delete_posts',
         { id: '1' },
@@ -110,7 +111,7 @@ describe('ConfirmationManager', () => {
       )
 
       // Create confirmation for session-2
-      manager.requestConfirmation(
+      void manager.requestConfirmation(
         'session-2',
         'delete_posts',
         { id: '2' },
@@ -126,8 +127,8 @@ describe('ConfirmationManager', () => {
   })
 
   describe('getConfirmation', () => {
-    it('should return the confirmation by ID', async () => {
-      manager.requestConfirmation(
+    it('should return the confirmation by ID', () => {
+      void manager.requestConfirmation(
         'session-1',
         'delete_posts',
         { id: '1' },
@@ -208,8 +209,8 @@ describe('ConfirmationManager', () => {
   })
 
   describe('cleanup', () => {
-    it('should remove old non-pending confirmations', async () => {
-      manager.requestConfirmation(
+    it('should remove old non-pending confirmations', () => {
+      void manager.requestConfirmation(
         'session-1',
         'delete_posts',
         { id: '1' },

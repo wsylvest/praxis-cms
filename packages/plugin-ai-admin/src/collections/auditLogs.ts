@@ -9,18 +9,6 @@ export const createAuditLogsCollection = (
 ): CollectionConfig => {
   const config: CollectionConfig = {
     slug: 'ai-admin-audit-logs',
-    labels: {
-      singular: 'Audit Log',
-      plural: 'Audit Logs',
-    },
-    admin: {
-      group: 'AI Admin',
-      description: 'Immutable audit trail of all AI actions',
-      defaultColumns: ['timestamp', 'userId', 'action', 'toolName', 'result'],
-      pagination: {
-        defaultLimit: 50,
-      },
-    },
     access: {
       // Only admins can read audit logs
       read: ({ req }) => {
@@ -29,55 +17,63 @@ export const createAuditLogsCollection = (
       // Logs are created programmatically only
       create: () => false,
       // Logs are immutable
-      update: () => false,
       delete: () => false,
+      update: () => false,
+    },
+    admin: {
+      defaultColumns: ['timestamp', 'userId', 'action', 'toolName', 'result'],
+      description: 'Immutable audit trail of all AI actions',
+      group: 'AI Admin',
+      pagination: {
+        defaultLimit: 50,
+      },
     },
     fields: [
       {
         name: 'timestamp',
         type: 'date',
-        required: true,
         admin: {
           date: {
             displayFormat: 'yyyy-MM-dd HH:mm:ss',
           },
         },
         index: true,
+        required: true,
       },
       {
         name: 'userId',
         type: 'text',
-        required: true,
-        index: true,
         admin: {
           description: 'User who performed the action',
         },
+        index: true,
+        required: true,
       },
       {
         name: 'sessionId',
         type: 'text',
-        required: true,
-        index: true,
         admin: {
           description: 'Session identifier',
         },
+        index: true,
+        required: true,
       },
       {
         name: 'action',
         type: 'text',
-        required: true,
-        index: true,
         admin: {
           description: 'Action type (e.g., chat, tool_call, login)',
         },
+        index: true,
+        required: true,
       },
       {
         name: 'toolName',
         type: 'text',
-        index: true,
         admin: {
           description: 'Name of the tool executed (if applicable)',
         },
+        index: true,
       },
       {
         name: 'parameters',
@@ -89,6 +85,7 @@ export const createAuditLogsCollection = (
       {
         name: 'result',
         type: 'select',
+        index: true,
         options: [
           { label: 'Success', value: 'success' },
           { label: 'Error', value: 'error' },
@@ -96,7 +93,6 @@ export const createAuditLogsCollection = (
           { label: 'Pending', value: 'pending' },
         ],
         required: true,
-        index: true,
       },
       {
         name: 'errorMessage',
@@ -136,17 +132,21 @@ export const createAuditLogsCollection = (
       {
         name: 'provider',
         type: 'select',
+        admin: {
+          description: 'AI provider used',
+        },
         options: [
           { label: 'Claude', value: 'claude' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Gemini', value: 'gemini' },
           { label: 'Grok', value: 'grok' },
         ],
-        admin: {
-          description: 'AI provider used',
-        },
       },
     ],
+    labels: {
+      plural: 'Audit Logs',
+      singular: 'Audit Log',
+    },
     timestamps: false, // We have our own timestamp field
   }
 

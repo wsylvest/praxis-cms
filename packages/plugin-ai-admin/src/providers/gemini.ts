@@ -6,28 +6,29 @@ import type {
   AITool,
   AIToolCall,
 } from '../types/index.js'
+
 import { BaseAIProvider, toolToStandardDefinition } from './base.js'
 
 interface GeminiContent {
-  role: 'user' | 'model'
   parts: GeminiPart[]
+  role: 'model' | 'user'
 }
 
 interface GeminiPart {
-  text?: string
   functionCall?: {
-    name: string
     args: Record<string, unknown>
+    name: string
   }
   functionResponse?: {
     name: string
     response: Record<string, unknown>
   }
+  text?: string
 }
 
 interface GeminiFunctionDeclaration {
-  name: string
   description: string
+  name: string
   parameters: Record<string, unknown>
 }
 
@@ -40,8 +41,8 @@ interface GeminiResponse {
     finishReason: string
   }>
   usageMetadata?: {
-    promptTokenCount: number
     candidatesTokenCount: number
+    promptTokenCount: number
   }
 }
 
@@ -51,100 +52,6 @@ interface GeminiResponse {
 export class GeminiProvider extends BaseAIProvider {
   private baseUrl = 'https://generativelanguage.googleapis.com/v1beta'
 
-  get name(): string {
-    return 'gemini'
-  }
-
-  get supportedModels(): string[] {
-    return [
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-8b',
-      'gemini-pro',
-    ]
-  }
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-
-    if (!this.config.apiKey) {
-      throw new Error('Gemini API key is required')
-    }
-
-    this.initialized = true
-  }
-
-  formatTools(tools: AITool[]): { functionDeclarations: GeminiFunctionDeclaration[] } {
-    return {
-      functionDeclarations: tools.map((tool) => {
-        const def = toolToStandardDefinition(tool)
-        return {
-          name: def.name,
-          description: def.description,
-          parameters: def.inputSchema,
-        }
-      }),
-    }
-  }
-
-  formatMessages(messages: AIMessage[]): GeminiContent[] {
-    const formatted: GeminiContent[] = []
-    let systemInstruction = ''
-
-    for (const msg of messages) {
-      if (msg.role === 'system') {
-        systemInstruction = msg.content
-        continue
-      }
-
-      const parts: GeminiPart[] = []
-
-      if (msg.role === 'user') {
-        if (msg.content) {
-          parts.push({ text: msg.content })
-        }
-
-        // Add function responses
-        if (msg.toolResults) {
-          for (const result of msg.toolResults) {
-            parts.push({
-              functionResponse: {
-                name: result.toolCallId, // Gemini uses function name, not ID
-                response: { result: result.result, error: result.error },
-              },
-            })
-          }
-        }
-
-        if (parts.length > 0) {
-          formatted.push({ role: 'user', parts })
-        }
-      } else if (msg.role === 'assistant') {
-        if (msg.content) {
-          parts.push({ text: msg.content })
-        }
-
-        if (msg.toolCalls) {
-          for (const call of msg.toolCalls) {
-            parts.push({
-              functionCall: {
-                name: call.name,
-                args: call.arguments,
-              },
-            })
-          }
-        }
-
-        if (parts.length > 0) {
-          formatted.push({ role: 'model', parts })
-        }
-      }
-    }
-
-    return formatted
-  }
-
   private async makeRequest(
     endpoint: string,
     body: Record<string, unknown>
@@ -153,9 +60,9 @@ export class GeminiProvider extends BaseAIProvider {
     const url = `${this.config.baseURL || this.baseUrl}/models/${model}:${endpoint}?key=${this.config.apiKey}`
 
     return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
     })
   }
 
@@ -207,6 +114,12 @@ export class GeminiProvider extends BaseAIProvider {
 
     return {
       content: textContent,
+      stopReason:
+        candidate.finishReason === 'TOOL_CODE'
+          ? 'tool_use'
+          : candidate.finishReason === 'MAX_TOKENS'
+            ? 'max_tokens'
+            : 'end_turn',
       toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       usage: data.usageMetadata
         ? {
@@ -214,13 +127,88 @@ export class GeminiProvider extends BaseAIProvider {
             outputTokens: data.usageMetadata.candidatesTokenCount,
           }
         : undefined,
-      stopReason:
-        candidate.finishReason === 'TOOL_CODE'
-          ? 'tool_use'
-          : candidate.finishReason === 'MAX_TOKENS'
-            ? 'max_tokens'
-            : 'end_turn',
     }
+  }
+
+  formatMessages(messages: AIMessage[]): GeminiContent[] {
+    const formatted: GeminiContent[] = []
+    for (const msg of messages) {
+      if (msg.role === 'system') {
+        // System messages are handled separately via systemInstruction in the API call
+        continue
+      }
+
+      const parts: GeminiPart[] = []
+
+      if (msg.role === 'user') {
+        if (msg.content) {
+          parts.push({ text: msg.content })
+        }
+
+        // Add function responses
+        if (msg.toolResults) {
+          for (const result of msg.toolResults) {
+            parts.push({
+              functionResponse: {
+                name: result.toolCallId, // Gemini uses function name, not ID
+                response: { error: result.error, result: result.result },
+              },
+            })
+          }
+        }
+
+        if (parts.length > 0) {
+          formatted.push({ parts, role: 'user' })
+        }
+      } else if (msg.role === 'assistant') {
+        if (msg.content) {
+          parts.push({ text: msg.content })
+        }
+
+        if (msg.toolCalls) {
+          for (const call of msg.toolCalls) {
+            parts.push({
+              functionCall: {
+                name: call.name,
+                args: call.arguments,
+              },
+            })
+          }
+        }
+
+        if (parts.length > 0) {
+          formatted.push({ parts, role: 'model' })
+        }
+      }
+    }
+
+    return formatted
+  }
+
+  formatTools(tools: AITool[]): { functionDeclarations: GeminiFunctionDeclaration[] } {
+    return {
+      functionDeclarations: tools.map((tool) => {
+        const def = toolToStandardDefinition(tool)
+        return {
+          name: def.name,
+          description: def.description,
+          parameters: def.inputSchema,
+        }
+      }),
+    }
+  }
+
+  initialize(): Promise<void> {
+    if (this.initialized) {
+      return Promise.resolve()
+    }
+
+    if (!this.config.apiKey) {
+      return Promise.reject(new Error('Gemini API key is required'))
+    }
+
+    this.initialized = true
+    return Promise.resolve()
   }
 
   async *stream(
@@ -266,7 +254,7 @@ export class GeminiProvider extends BaseAIProvider {
     try {
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {break}
 
         buffer += decoder.decode(value, { stream: true })
 
@@ -309,5 +297,19 @@ export class GeminiProvider extends BaseAIProvider {
     } finally {
       reader.releaseLock()
     }
+  }
+
+  get name(): string {
+    return 'gemini'
+  }
+
+  get supportedModels(): string[] {
+    return [
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-pro',
+    ]
   }
 }

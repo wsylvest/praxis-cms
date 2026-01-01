@@ -5,61 +5,61 @@ import type { z } from 'zod'
 // AI Provider Types
 // =============================================================================
 
-export type AIProvider = 'claude' | 'openai' | 'gemini' | 'grok' | 'ollama'
+export type AIProvider = 'claude' | 'gemini' | 'grok' | 'ollama' | 'openai'
 
 export interface AIProviderConfig {
-  provider: AIProvider
   apiKey?: string
   baseURL?: string
-  model?: string
   maxTokens?: number
+  model?: string
+  provider: AIProvider
   temperature?: number
 }
 
 export interface AIMessage {
-  role: 'user' | 'assistant' | 'system'
   content: string
+  role: 'assistant' | 'system' | 'user'
   toolCalls?: AIToolCall[]
   toolResults?: AIToolResult[]
 }
 
 export interface AIToolCall {
+  arguments: Record<string, unknown>
   id: string
   name: string
-  arguments: Record<string, unknown>
 }
 
 export interface AIToolResult {
-  toolCallId: string
-  result: unknown
   error?: string
+  result: unknown
+  toolCallId: string
 }
 
 export interface AIStreamEvent {
-  type: 'text_delta' | 'tool_use' | 'tool_result' | 'complete' | 'error'
   content?: string
+  error?: string
   toolCall?: AIToolCall
   toolResult?: AIToolResult
-  error?: string
+  type: 'complete' | 'error' | 'text_delta' | 'tool_result' | 'tool_use'
 }
 
 export interface AICompletionOptions {
-  messages: AIMessage[]
-  tools?: AITool[]
-  stream?: boolean
   maxTokens?: number
-  temperature?: number
+  messages: AIMessage[]
+  stream?: boolean
   systemPrompt?: string
+  temperature?: number
+  tools?: AITool[]
 }
 
 export interface AICompletionResponse {
   content: string
+  stopReason?: 'end_turn' | 'error' | 'max_tokens' | 'tool_use'
   toolCalls?: AIToolCall[]
   usage?: {
     inputTokens: number
     outputTokens: number
   }
-  stopReason?: 'end_turn' | 'tool_use' | 'max_tokens' | 'error'
 }
 
 // =============================================================================
@@ -67,23 +67,23 @@ export interface AICompletionResponse {
 // =============================================================================
 
 export type ToolCategory =
+  | 'admin'
+  | 'analytics'
+  | 'config'
   | 'content'
   | 'media'
-  | 'config'
-  | 'analytics'
   | 'workflow'
-  | 'admin'
 
 export interface AITool {
-  name: string
   category: ToolCategory
+  confirmationRequired?: boolean
+  deferLoading?: boolean
   description: string
+  handler: ToolHandler
+  name: string
   parameters: z.ZodObject<z.ZodRawShape>
   permissions: string[]
-  confirmationRequired?: boolean
   undoable?: boolean
-  deferLoading?: boolean
-  handler: ToolHandler
 }
 
 export type ToolHandler = (
@@ -92,18 +92,18 @@ export type ToolHandler = (
 ) => Promise<ToolHandlerResult>
 
 export interface ToolContext {
+  auditLogger: AuditLogger
   payload: PayloadRequest['payload']
-  user: TypedUser
   session: SessionContext
   undoManager: UndoManager
-  auditLogger: AuditLogger
+  user?: TypedUser
 }
 
 export interface ToolHandlerResult {
-  success: boolean
   data?: unknown
-  message?: string
   error?: string
+  message?: string
+  success: boolean
   undoAction?: UndoAction
 }
 
@@ -112,32 +112,32 @@ export interface ToolHandlerResult {
 // =============================================================================
 
 export interface SessionContext {
-  id: string
-  userId: string
-  currentCollection?: CollectionSlug
-  selectedDocuments?: string[]
   conversationId?: string
-  metadata?: Record<string, unknown>
   createdAt: Date
+  currentCollection?: CollectionSlug
   expiresAt: Date
+  id: string
+  metadata?: Record<string, unknown>
+  selectedDocuments?: string[]
+  userId: string
 }
 
 export interface ConversationContext {
-  id: string
-  sessionId: string
-  userId: string
-  messages: AIMessage[]
-  toolHistory: ToolExecutionRecord[]
   createdAt: Date
+  id: string
+  messages: AIMessage[]
+  sessionId: string
+  toolHistory: ToolExecutionRecord[]
   updatedAt: Date
+  userId: string
 }
 
 export interface ToolExecutionRecord {
-  id: string
-  toolName: string
   arguments: Record<string, unknown>
+  id: string
   result: ToolHandlerResult
   timestamp: Date
+  toolName: string
   undoable: boolean
   undoExpires?: Date
 }
@@ -147,19 +147,19 @@ export interface ToolExecutionRecord {
 // =============================================================================
 
 export interface UndoAction {
-  id: string
-  toolName: string
   description: string
+  expiresAt: Date
+  id: string
   previousState: unknown
   reverseOperation: () => Promise<void>
-  expiresAt: Date
+  toolName: string
 }
 
 export interface UndoManager {
+  cleanup(): Promise<void>
+  getAvailable(sessionId: string): Promise<UndoAction[]>
   save(action: Omit<UndoAction, 'id'>): Promise<string>
   undo(actionId: string): Promise<void>
-  getAvailable(sessionId: string): Promise<UndoAction[]>
-  cleanup(): Promise<void>
 }
 
 // =============================================================================
@@ -167,10 +167,10 @@ export interface UndoManager {
 // =============================================================================
 
 export interface RateLimitConfig {
-  windowMs: number
+  keyGenerator?: (req: PayloadRequest) => string
   maxRequests: number
   maxTokensPerWindow?: number
-  keyGenerator?: (req: PayloadRequest) => string
+  windowMs: number
 }
 
 export interface RateLimitResult {
@@ -181,19 +181,19 @@ export interface RateLimitResult {
 }
 
 export interface AuditLogEntry {
-  id: string
-  timestamp: Date
-  userId: string
-  sessionId: string
   action: string
-  toolName?: string
-  parameters?: Record<string, unknown>
-  result: 'success' | 'error' | 'denied' | 'pending'
   errorMessage?: string
+  id: string
   ipAddress?: string
-  userAgent?: string
-  tokensUsed?: number
+  parameters?: Record<string, unknown>
   responseTimeMs?: number
+  result: 'denied' | 'error' | 'pending' | 'success'
+  sessionId: string
+  timestamp: Date
+  tokensUsed?: number
+  toolName?: string
+  userAgent?: string
+  userId: string
 }
 
 export interface AuditLogger {
@@ -202,48 +202,48 @@ export interface AuditLogger {
 }
 
 export interface AuditQueryFilters {
-  userId?: string
-  sessionId?: string
   action?: string
-  toolName?: string
-  result?: AuditLogEntry['result']
-  startDate?: Date
   endDate?: Date
   limit?: number
   offset?: number
+  result?: AuditLogEntry['result']
+  sessionId?: string
+  startDate?: Date
+  toolName?: string
+  userId?: string
 }
 
 export interface IPAllowlistConfig {
-  enabled: boolean
-  allowedIPs?: string[]
   allowedCIDRs?: string[]
+  allowedIPs?: string[]
   denyByDefault?: boolean
+  enabled: boolean
 }
 
 // =============================================================================
 // Confirmation Types
 // =============================================================================
 
-export type ConfirmationLevel = 'none' | 'inline' | 'modal' | 'email' | 'webhook'
+export type ConfirmationLevel = 'email' | 'inline' | 'modal' | 'none' | 'webhook'
 
 export interface ConfirmationConfig {
-  defaultLevel: ConfirmationLevel
-  destructiveActions: ConfirmationLevel
   bulkOperations: ConfirmationLevel
   configChanges: ConfirmationLevel
+  defaultLevel: ConfirmationLevel
+  destructiveActions: ConfirmationLevel
   timeoutSeconds: number
 }
 
 export interface PendingConfirmation {
-  id: string
-  sessionId: string
-  toolName: string
   arguments: Record<string, unknown>
-  level: ConfirmationLevel
-  message: string
   createdAt: Date
   expiresAt: Date
-  status: 'pending' | 'approved' | 'denied' | 'expired'
+  id: string
+  level: ConfirmationLevel
+  message: string
+  sessionId: string
+  status: 'approved' | 'denied' | 'expired' | 'pending'
+  toolName: string
 }
 
 // =============================================================================
@@ -251,16 +251,16 @@ export interface PendingConfirmation {
 // =============================================================================
 
 export interface AIGeneratedDraft {
-  id: string
-  sessionId: string
-  conversationId: string
   collection: CollectionSlug
-  documentId?: string
   content: Record<string, unknown>
-  prompt: string
+  conversationId: string
   createdAt: Date
+  documentId?: string
   expiresAt: Date
-  status: 'draft' | 'applied' | 'discarded'
+  id: string
+  prompt: string
+  sessionId: string
+  status: 'applied' | 'discarded' | 'draft'
 }
 
 // =============================================================================
@@ -268,27 +268,47 @@ export interface AIGeneratedDraft {
 // =============================================================================
 
 export interface PluginAIAdminConfig {
-  /** Enable/disable the plugin */
-  enabled?: boolean
-
-  /** AI provider configurations */
-  providers: AIProviderConfig[]
-
-  /** Default provider to use */
-  defaultProvider: AIProvider
+  /** Admin UI configuration */
+  admin?: {
+    chatPosition?: 'drawer' | 'modal' | 'sidebar'
+    defaultOpen?: boolean
+    showInNav?: boolean
+  }
 
   /** Collections to enable AI tools for */
   collections?: Partial<Record<CollectionSlug, CollectionAIConfig>>
 
+  /** Confirmation settings */
+  confirmation?: ConfirmationConfig
+
+  /** Default provider to use */
+  defaultProvider: AIProvider
+
+  /** Enable/disable the plugin */
+  enabled?: boolean
+
+  /** Override collections */
+  overrideCollections?: {
+    auditLogs?: (config: CollectionConfig) => CollectionConfig
+    conversations?: (config: CollectionConfig) => CollectionConfig
+    drafts?: (config: CollectionConfig) => CollectionConfig
+  }
+
+  /** AI provider configurations */
+  providers: AIProviderConfig[]
+
   /** Security configuration */
   security?: {
-    rateLimit?: RateLimitConfig
     ipAllowlist?: IPAllowlistConfig
+    rateLimit?: RateLimitConfig
     requireAuth?: boolean
   }
 
-  /** Confirmation settings */
-  confirmation?: ConfirmationConfig
+  /** Streaming configuration */
+  streaming?: {
+    enabled?: boolean
+    heartbeatIntervalMs?: number
+  }
 
   /** Custom tools to add */
   tools?: AITool[]
@@ -298,38 +318,18 @@ export interface PluginAIAdminConfig {
     enabled?: boolean
     retentionHours?: number
   }
-
-  /** Streaming configuration */
-  streaming?: {
-    enabled?: boolean
-    heartbeatIntervalMs?: number
-  }
-
-  /** Admin UI configuration */
-  admin?: {
-    chatPosition?: 'sidebar' | 'drawer' | 'modal'
-    showInNav?: boolean
-    defaultOpen?: boolean
-  }
-
-  /** Override collections */
-  overrideCollections?: {
-    conversations?: (config: CollectionConfig) => CollectionConfig
-    auditLogs?: (config: CollectionConfig) => CollectionConfig
-    drafts?: (config: CollectionConfig) => CollectionConfig
-  }
 }
 
 export interface CollectionAIConfig {
-  enabled: boolean | {
+  description?: string
+  enabled: {
     create?: boolean
+    delete?: boolean
     read?: boolean
     update?: boolean
-    delete?: boolean
-  }
-  description?: string
-  generateFields?: string[]
+  } | boolean
   excludeFields?: string[]
+  generateFields?: string[]
 }
 
 // =============================================================================
@@ -337,14 +337,14 @@ export interface CollectionAIConfig {
 // =============================================================================
 
 export interface AIChatPanelProps {
-  position?: 'sidebar' | 'drawer' | 'modal'
   defaultOpen?: boolean
   onClose?: () => void
+  position?: 'drawer' | 'modal' | 'sidebar'
 }
 
 export interface AIMessageProps {
-  message: AIMessage
   isStreaming?: boolean
+  message: AIMessage
 }
 
 export interface ConfirmationDialogProps {
@@ -355,6 +355,6 @@ export interface ConfirmationDialogProps {
 
 export interface UndoToastProps {
   action: UndoAction
-  onUndo: () => void
   onDismiss: () => void
+  onUndo: () => void
 }

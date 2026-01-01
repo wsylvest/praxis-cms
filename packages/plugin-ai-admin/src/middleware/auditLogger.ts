@@ -1,4 +1,5 @@
 import type { Payload, PayloadRequest } from 'payload'
+
 import { v4 as uuid } from 'uuid'
 
 import type {
@@ -12,12 +13,12 @@ import type {
  * Stores logs in Payload collection for persistence and queryability
  */
 export class PayloadAuditLogger implements AuditLogger {
-  private payload: Payload
-  private collectionSlug = 'ai-admin-audit-logs'
   private buffer: Omit<AuditLogEntry, 'id' | 'timestamp'>[] = []
+  private collectionSlug = 'ai-admin-audit-logs'
   private flushInterval: NodeJS.Timeout | null = null
-  private maxBufferSize = 100
   private flushIntervalMs = 5000
+  private maxBufferSize = 100
+  private payload: Payload
 
   constructor(payload: Payload) {
     this.payload = payload
@@ -27,22 +28,45 @@ export class PayloadAuditLogger implements AuditLogger {
   }
 
   /**
-   * Log an audit entry
+   * Create an audit log entry from a request
    */
-  async log(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> {
-    this.buffer.push(entry)
-
-    // Flush if buffer is full
-    if (this.buffer.length >= this.maxBufferSize) {
-      await this.flush()
+  static fromRequest(
+    req: PayloadRequest,
+    action: string,
+    extra?: Partial<Omit<AuditLogEntry, 'id' | 'timestamp'>>
+  ): Omit<AuditLogEntry, 'id' | 'timestamp'> {
+    return {
+      action,
+      ipAddress:
+        req.headers.get('x-forwarded-for')?.split(',')[0] ||
+        req.headers.get('x-real-ip') ||
+        'unknown',
+      result: 'pending',
+      sessionId: req.headers.get('x-session-id') || 'unknown',
+      userAgent: req.headers.get('user-agent') || undefined,
+      userId: req.user?.id ? String(req.user.id) : 'anonymous',
+      ...extra,
     }
+  }
+
+  /**
+   * Stop the flush interval
+   */
+  async destroy(): Promise<void> {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval)
+      this.flushInterval = null
+    }
+
+    // Final flush
+    await this.flush()
   }
 
   /**
    * Flush buffered entries to database
    */
   async flush(): Promise<void> {
-    if (this.buffer.length === 0) return
+    if (this.buffer.length === 0) {return}
 
     const entries = [...this.buffer]
     this.buffer = []
@@ -64,6 +88,18 @@ export class PayloadAuditLogger implements AuditLogger {
       // Re-add failed entries to buffer
       this.buffer.unshift(...entries)
       console.error('Failed to flush audit logs:', error)
+    }
+  }
+
+  /**
+   * Log an audit entry
+   */
+  async log(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> {
+    this.buffer.push(entry)
+
+    // Flush if buffer is full
+    if (this.buffer.length >= this.maxBufferSize) {
+      await this.flush()
     }
   }
 
@@ -102,49 +138,13 @@ export class PayloadAuditLogger implements AuditLogger {
 
     const result = await this.payload.find({
       collection: this.collectionSlug,
-      where: Object.keys(where).length > 0 ? (where as any) : undefined,
       limit: filters.limit || 100,
       page: filters.offset ? Math.floor(filters.offset / (filters.limit || 100)) + 1 : 1,
       sort: '-timestamp',
+      where: Object.keys(where).length > 0 ? (where as any) : undefined,
     })
 
     return result.docs as unknown as AuditLogEntry[]
-  }
-
-  /**
-   * Create an audit log entry from a request
-   */
-  static fromRequest(
-    req: PayloadRequest,
-    action: string,
-    extra?: Partial<Omit<AuditLogEntry, 'id' | 'timestamp'>>
-  ): Omit<AuditLogEntry, 'id' | 'timestamp'> {
-    return {
-      // @ts-expect-error - user may not exist
-      userId: req.user?.id || 'anonymous',
-      sessionId: req.headers.get('x-session-id') || 'unknown',
-      action,
-      result: 'pending',
-      ipAddress:
-        req.headers.get('x-forwarded-for')?.split(',')[0] ||
-        req.headers.get('x-real-ip') ||
-        'unknown',
-      userAgent: req.headers.get('user-agent') || undefined,
-      ...extra,
-    }
-  }
-
-  /**
-   * Stop the flush interval
-   */
-  async destroy(): Promise<void> {
-    if (this.flushInterval) {
-      clearInterval(this.flushInterval)
-      this.flushInterval = null
-    }
-
-    // Final flush
-    await this.flush()
   }
 }
 
@@ -154,7 +154,15 @@ export class PayloadAuditLogger implements AuditLogger {
 export class InMemoryAuditLogger implements AuditLogger {
   private logs: AuditLogEntry[] = []
 
-  async log(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> {
+  clear(): void {
+    this.logs = []
+  }
+
+  getAll(): AuditLogEntry[] {
+    return [...this.logs]
+  }
+
+  log(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> {
     this.logs.push({
       id: uuid(),
       timestamp: new Date(),
@@ -165,9 +173,10 @@ export class InMemoryAuditLogger implements AuditLogger {
     if (this.logs.length > 10000) {
       this.logs = this.logs.slice(-10000)
     }
+    return Promise.resolve()
   }
 
-  async query(filters: AuditQueryFilters): Promise<AuditLogEntry[]> {
+  query(filters: AuditQueryFilters): Promise<AuditLogEntry[]> {
     let results = [...this.logs]
 
     if (filters.userId) {
@@ -199,15 +208,7 @@ export class InMemoryAuditLogger implements AuditLogger {
     const offset = filters.offset || 0
     const limit = filters.limit || 100
 
-    return results.slice(offset, offset + limit)
-  }
-
-  getAll(): AuditLogEntry[] {
-    return [...this.logs]
-  }
-
-  clear(): void {
-    this.logs = []
+    return Promise.resolve(results.slice(offset, offset + limit))
   }
 }
 

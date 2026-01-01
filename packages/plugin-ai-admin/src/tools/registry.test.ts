@@ -1,23 +1,25 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { ToolRegistry } from './registry.js'
+
 import type { AITool, SessionContext } from '../types/index.js'
+
+import { ToolRegistry } from './registry.js'
 
 describe('ToolRegistry', () => {
   let registry: ToolRegistry
 
   const createMockTool = (overrides: Partial<AITool> = {}): AITool => ({
     name: 'test_tool',
-    description: 'A test tool',
     category: 'content',
+    description: 'A test tool',
+    handler: (params) => Promise.resolve({
+      data: { echo: params.input },
+      success: true,
+    }),
     parameters: z.object({
       input: z.string().describe('Test input'),
     }),
     permissions: [],
-    handler: async (params) => ({
-      success: true,
-      data: { echo: params.input },
-    }),
     ...overrides,
   })
 
@@ -118,9 +120,9 @@ describe('ToolRegistry', () => {
 
       const context: SessionContext = {
         id: 'session-1',
-        userId: 'user-1',
         createdAt: new Date(),
         expiresAt: new Date(),
+        userId: 'user-1',
       }
 
       // Regular user should only get public tool
@@ -145,9 +147,9 @@ describe('ToolRegistry', () => {
 
       const context: SessionContext = {
         id: 'session-1',
-        userId: 'user-1',
         createdAt: new Date(),
         expiresAt: new Date(),
+        userId: 'user-1',
       }
 
       // posts:* should match posts:create
@@ -208,9 +210,9 @@ describe('ToolRegistry', () => {
 
       const context: SessionContext = {
         id: 'session-1',
-        userId: 'user-1',
         createdAt: new Date(),
         expiresAt: new Date(),
+        userId: 'user-1',
       }
 
       const result = registry.getOptimized(context, ['admin'], 1000)

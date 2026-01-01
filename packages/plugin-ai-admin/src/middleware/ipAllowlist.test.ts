@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { IPAllowlist } from './ipAllowlist.js'
 
 // Mock PayloadRequest for testing
@@ -23,9 +24,9 @@ describe('IPAllowlist', () => {
 
     beforeEach(() => {
       allowlist = new IPAllowlist({
-        enabled: true,
         allowedIPs: ['192.168.1.1', '10.0.0.5'],
         denyByDefault: true,
+        enabled: true,
       })
     })
 
@@ -45,9 +46,9 @@ describe('IPAllowlist', () => {
 
     beforeEach(() => {
       allowlist = new IPAllowlist({
-        enabled: true,
         allowedCIDRs: ['192.168.1.0/24', '10.0.0.0/8'],
         denyByDefault: true,
+        enabled: true,
       })
     })
 
@@ -69,10 +70,10 @@ describe('IPAllowlist', () => {
 
     beforeEach(() => {
       allowlist = new IPAllowlist({
-        enabled: true,
-        allowedIPs: ['1.2.3.4'],
         allowedCIDRs: ['192.168.0.0/16'],
+        allowedIPs: ['1.2.3.4'],
         denyByDefault: true,
+        enabled: true,
       })
     })
 
@@ -85,9 +86,9 @@ describe('IPAllowlist', () => {
   describe('denyByDefault: false', () => {
     it('should allow all IPs when denyByDefault is false', () => {
       const allowlist = new IPAllowlist({
-        enabled: true,
         allowedIPs: ['192.168.1.1'],
         denyByDefault: false,
+        enabled: true,
       })
 
       // The allowlist becomes a "recommendation" rather than a block
@@ -99,8 +100,8 @@ describe('IPAllowlist', () => {
   describe('dynamic updates', () => {
     it('should allow adding IPs dynamically', () => {
       const allowlist = new IPAllowlist({
-        enabled: true,
         denyByDefault: true,
+        enabled: true,
       })
 
       expect(allowlist.isAllowed(createMockRequest('192.168.1.1'))).toBe(false)
@@ -111,9 +112,9 @@ describe('IPAllowlist', () => {
 
     it('should allow removing IPs dynamically', () => {
       const allowlist = new IPAllowlist({
-        enabled: true,
         allowedIPs: ['192.168.1.1'],
         denyByDefault: true,
+        enabled: true,
       })
 
       expect(allowlist.isAllowed(createMockRequest('192.168.1.1'))).toBe(true)
@@ -124,8 +125,8 @@ describe('IPAllowlist', () => {
 
     it('should allow adding CIDR ranges dynamically', () => {
       const allowlist = new IPAllowlist({
-        enabled: true,
         denyByDefault: true,
+        enabled: true,
       })
 
       expect(allowlist.isAllowed(createMockRequest('10.0.0.5'))).toBe(false)
@@ -138,10 +139,10 @@ describe('IPAllowlist', () => {
   describe('getConfig', () => {
     it('should return current configuration', () => {
       const allowlist = new IPAllowlist({
-        enabled: true,
-        allowedIPs: ['1.2.3.4'],
         allowedCIDRs: ['10.0.0.0/8'],
+        allowedIPs: ['1.2.3.4'],
         denyByDefault: true,
+        enabled: true,
       })
 
       const config = allowlist.getConfig()

@@ -9,41 +9,37 @@ export const createUndoActionsCollection = (
 ): CollectionConfig => {
   const config: CollectionConfig = {
     slug: 'ai-admin-undo-actions',
-    labels: {
-      singular: 'Undo Action',
-      plural: 'Undo Actions',
-    },
-    admin: {
-      group: 'AI Admin',
-      description: 'Reversible actions for undo/rollback',
-      defaultColumns: ['description', 'toolName', 'status', 'createdAt'],
-    },
     access: {
+      create: () => false, // Created programmatically
+      delete: ({ req }) => {
+        return (req.user as any)?.role === 'admin'
+      },
       read: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
         return {
           userId: { equals: req.user.id },
         }
       },
-      create: () => false, // Created programmatically
       update: () => false, // Immutable after creation
-      delete: ({ req }) => {
-        return (req.user as any)?.role === 'admin'
-      },
+    },
+    admin: {
+      defaultColumns: ['description', 'toolName', 'status', 'createdAt'],
+      description: 'Reversible actions for undo/rollback',
+      group: 'AI Admin',
     },
     fields: [
       {
         name: 'userId',
         type: 'text',
-        required: true,
         index: true,
+        required: true,
       },
       {
         name: 'sessionId',
         type: 'text',
-        required: true,
         index: true,
+        required: true,
       },
       {
         name: 'conversationId',
@@ -53,16 +49,16 @@ export const createUndoActionsCollection = (
       {
         name: 'toolName',
         type: 'text',
-        required: true,
         index: true,
+        required: true,
       },
       {
         name: 'description',
         type: 'text',
-        required: true,
         admin: {
           description: 'Human-readable description of the action',
         },
+        required: true,
       },
       {
         name: 'operation',
@@ -79,10 +75,10 @@ export const createUndoActionsCollection = (
       {
         name: 'collection',
         type: 'text',
-        required: true,
         admin: {
           description: 'Target collection',
         },
+        required: true,
       },
       {
         name: 'documentId',
@@ -101,10 +97,10 @@ export const createUndoActionsCollection = (
       {
         name: 'previousState',
         type: 'json',
-        required: true,
         admin: {
           description: 'State before the action (for rollback)',
         },
+        required: true,
       },
       {
         name: 'newState',
@@ -116,15 +112,15 @@ export const createUndoActionsCollection = (
       {
         name: 'status',
         type: 'select',
+        defaultValue: 'available',
+        index: true,
         options: [
           { label: 'Available', value: 'available' },
           { label: 'Undone', value: 'undone' },
           { label: 'Expired', value: 'expired' },
           { label: 'Failed', value: 'failed' },
         ],
-        defaultValue: 'available',
         required: true,
-        index: true,
       },
       {
         name: 'undoneAt',
@@ -136,11 +132,11 @@ export const createUndoActionsCollection = (
       {
         name: 'expiresAt',
         type: 'date',
-        required: true,
-        index: true,
         admin: {
           description: 'When the undo option expires',
         },
+        index: true,
+        required: true,
       },
       {
         name: 'errorMessage',
@@ -150,6 +146,10 @@ export const createUndoActionsCollection = (
         },
       },
     ],
+    labels: {
+      plural: 'Undo Actions',
+      singular: 'Undo Action',
+    },
     timestamps: true,
   }
 

@@ -13,20 +13,33 @@ interface RateLimitEntry {
  * For production, replace with Redis-based implementation
  */
 export class RateLimiter {
-  private store: Map<string, RateLimitEntry> = new Map()
-  private config: RateLimitConfig
   private cleanupInterval: NodeJS.Timeout | null = null
+  private config: RateLimitConfig
+  private store: Map<string, RateLimitEntry> = new Map()
 
   constructor(config: RateLimitConfig) {
     this.config = {
-      windowMs: config.windowMs || 60000, // 1 minute default
+      keyGenerator: config.keyGenerator || this.defaultKeyGenerator,
       maxRequests: config.maxRequests || 100,
       maxTokensPerWindow: config.maxTokensPerWindow || 100000,
-      keyGenerator: config.keyGenerator || this.defaultKeyGenerator,
+      windowMs: config.windowMs || 60000, // 1 minute default
     }
 
     // Cleanup expired entries every minute
     this.cleanupInterval = setInterval(() => this.cleanup(), 60000)
+  }
+
+  /**
+   * Cleanup expired entries
+   */
+  private cleanup(): void {
+    const now = Date.now()
+
+    for (const [key, entry] of this.store) {
+      if (now - entry.windowStart >= this.config.windowMs) {
+        this.store.delete(key)
+      }
+    }
   }
 
   private defaultKeyGenerator(req: PayloadRequest): string {
@@ -44,6 +57,19 @@ export class RateLimiter {
       req.headers.get('x-real-ip') ||
       'unknown'
     return `ip:${ip}`
+  }
+
+  /**
+   * Add tokens used after completion (for accurate token tracking)
+   */
+  addTokens(req: PayloadRequest, tokens: number): void {
+    const key = this.config.keyGenerator!(req)
+    const entry = this.store.get(key)
+
+    if (entry) {
+      entry.tokens += tokens
+      this.store.set(key, entry)
+    }
   }
 
   /**
@@ -88,31 +114,28 @@ export class RateLimiter {
   }
 
   /**
-   * Add tokens used after completion (for accurate token tracking)
+   * Stop the cleanup interval
    */
-  addTokens(req: PayloadRequest, tokens: number): void {
-    const key = this.config.keyGenerator!(req)
-    const entry = this.store.get(key)
-
-    if (entry) {
-      entry.tokens += tokens
-      this.store.set(key, entry)
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval)
+      this.cleanupInterval = null
     }
   }
 
   /**
    * Get current usage for a request
    */
-  getUsage(req: PayloadRequest): { requests: number; tokens: number; resetAt: Date } | null {
+  getUsage(req: PayloadRequest): { requests: number; resetAt: Date; tokens: number } | null {
     const key = this.config.keyGenerator!(req)
     const entry = this.store.get(key)
 
-    if (!entry) return null
+    if (!entry) {return null}
 
     return {
       requests: entry.count,
-      tokens: entry.tokens,
       resetAt: new Date(entry.windowStart + this.config.windowMs),
+      tokens: entry.tokens,
     }
   }
 
@@ -122,29 +145,6 @@ export class RateLimiter {
   reset(req: PayloadRequest): void {
     const key = this.config.keyGenerator!(req)
     this.store.delete(key)
-  }
-
-  /**
-   * Cleanup expired entries
-   */
-  private cleanup(): void {
-    const now = Date.now()
-
-    for (const [key, entry] of this.store) {
-      if (now - entry.windowStart >= this.config.windowMs) {
-        this.store.delete(key)
-      }
-    }
-  }
-
-  /**
-   * Stop the cleanup interval
-   */
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval)
-      this.cleanupInterval = null
-    }
   }
 }
 

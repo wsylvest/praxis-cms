@@ -4,11 +4,11 @@ import type {
   AICompletionOptions,
   AICompletionResponse,
   AIMessage,
-  AIProviderConfig,
   AIStreamEvent,
   AITool,
   AIToolCall,
 } from '../types/index.js'
+
 import { BaseAIProvider, toolToStandardDefinition } from './base.js'
 
 /**
@@ -16,96 +16,6 @@ import { BaseAIProvider, toolToStandardDefinition } from './base.js'
  */
 export class ClaudeProvider extends BaseAIProvider {
   private client: Anthropic | null = null
-
-  get name(): string {
-    return 'claude'
-  }
-
-  get supportedModels(): string[] {
-    return [
-      'claude-opus-4-20250514',
-      'claude-sonnet-4-20250514',
-      'claude-3-5-haiku-20241022',
-      'claude-3-5-sonnet-20241022',
-      'claude-3-opus-20240229',
-    ]
-  }
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-
-    this.client = new Anthropic({
-      apiKey: this.config.apiKey,
-      baseURL: this.config.baseURL,
-    })
-
-    this.initialized = true
-  }
-
-  formatTools(tools: AITool[]): Anthropic.Tool[] {
-    return tools.map((tool) => {
-      const def = toolToStandardDefinition(tool)
-      return {
-        name: def.name,
-        description: def.description,
-        input_schema: def.inputSchema as Anthropic.Tool['input_schema'],
-      }
-    })
-  }
-
-  formatMessages(messages: AIMessage[]): Anthropic.MessageParam[] {
-    const formatted: Anthropic.MessageParam[] = []
-
-    for (const msg of messages) {
-      if (msg.role === 'system') continue // System handled separately
-
-      if (msg.role === 'user') {
-        const content: Anthropic.ContentBlockParam[] = []
-
-        // Add text content
-        if (msg.content) {
-          content.push({ type: 'text', text: msg.content })
-        }
-
-        // Add tool results if present
-        if (msg.toolResults) {
-          for (const result of msg.toolResults) {
-            content.push({
-              type: 'tool_result',
-              tool_use_id: result.toolCallId,
-              content: result.error || JSON.stringify(result.result),
-              is_error: !!result.error,
-            })
-          }
-        }
-
-        formatted.push({ role: 'user', content })
-      } else if (msg.role === 'assistant') {
-        const content: Anthropic.ContentBlockParam[] = []
-
-        // Add text content
-        if (msg.content) {
-          content.push({ type: 'text', text: msg.content })
-        }
-
-        // Add tool calls if present
-        if (msg.toolCalls) {
-          for (const call of msg.toolCalls) {
-            content.push({
-              type: 'tool_use',
-              id: call.id,
-              name: call.name,
-              input: call.arguments,
-            })
-          }
-        }
-
-        formatted.push({ role: 'assistant', content })
-      }
-    }
-
-    return formatted
-  }
 
   async complete(options: AICompletionOptions): Promise<AICompletionResponse> {
     if (!this.client) {
@@ -116,11 +26,11 @@ export class ClaudeProvider extends BaseAIProvider {
       options.messages.find((m) => m.role === 'system')?.content
 
     const response = await this.client.messages.create({
-      model: this.config.model || this.getDefaultModel(),
       max_tokens: options.maxTokens || this.config.maxTokens || 4096,
-      temperature: options.temperature ?? this.config.temperature,
-      system: systemPrompt,
       messages: this.formatMessages(options.messages),
+      model: this.config.model || this.getDefaultModel(),
+      system: systemPrompt,
+      temperature: options.temperature ?? this.config.temperature,
       tools: options.tools ? this.formatTools(options.tools) : undefined,
     })
 
@@ -142,18 +52,97 @@ export class ClaudeProvider extends BaseAIProvider {
 
     return {
       content: textContent,
-      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-      usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-      },
       stopReason:
         response.stop_reason === 'tool_use'
           ? 'tool_use'
           : response.stop_reason === 'max_tokens'
             ? 'max_tokens'
             : 'end_turn',
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      usage: {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      },
     }
+  }
+
+  formatMessages(messages: AIMessage[]): Anthropic.MessageParam[] {
+    const formatted: Anthropic.MessageParam[] = []
+
+    for (const msg of messages) {
+      if (msg.role === 'system') {continue} // System handled separately
+
+      if (msg.role === 'user') {
+        const content: Anthropic.ContentBlockParam[] = []
+
+        // Add text content
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content })
+        }
+
+        // Add tool results if present
+        if (msg.toolResults) {
+          for (const result of msg.toolResults) {
+            content.push({
+              type: 'tool_result',
+              content: result.error || JSON.stringify(result.result),
+              is_error: !!result.error,
+              tool_use_id: result.toolCallId,
+            })
+          }
+        }
+
+        formatted.push({ content, role: 'user' })
+      } else if (msg.role === 'assistant') {
+        const content: Anthropic.ContentBlockParam[] = []
+
+        // Add text content
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content })
+        }
+
+        // Add tool calls if present
+        if (msg.toolCalls) {
+          for (const call of msg.toolCalls) {
+            content.push({
+              id: call.id,
+              name: call.name,
+              type: 'tool_use',
+              input: call.arguments,
+            })
+          }
+        }
+
+        formatted.push({ content, role: 'assistant' })
+      }
+    }
+
+    return formatted
+  }
+
+  formatTools(tools: AITool[]): Anthropic.Tool[] {
+    return tools.map((tool) => {
+      const def = toolToStandardDefinition(tool)
+      return {
+        name: def.name,
+        description: def.description,
+        input_schema: def.inputSchema as Anthropic.Tool['input_schema'],
+      }
+    })
+  }
+
+  initialize(): Promise<void> {
+    if (this.initialized) {
+      return Promise.resolve()
+    }
+
+    this.client = new Anthropic({
+      apiKey: this.config.apiKey,
+      baseURL: this.config.baseURL,
+    })
+
+    this.initialized = true
+    return Promise.resolve()
   }
 
   async *stream(
@@ -167,15 +156,15 @@ export class ClaudeProvider extends BaseAIProvider {
       options.messages.find((m) => m.role === 'system')?.content
 
     const stream = this.client.messages.stream({
-      model: this.config.model || this.getDefaultModel(),
       max_tokens: options.maxTokens || this.config.maxTokens || 4096,
-      temperature: options.temperature ?? this.config.temperature,
-      system: systemPrompt,
       messages: this.formatMessages(options.messages),
+      model: this.config.model || this.getDefaultModel(),
+      system: systemPrompt,
+      temperature: options.temperature ?? this.config.temperature,
       tools: options.tools ? this.formatTools(options.tools) : undefined,
     })
 
-    let currentToolCall: Partial<AIToolCall> | null = null
+    let currentToolCall: null | Partial<AIToolCall> = null
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
@@ -205,5 +194,19 @@ export class ClaudeProvider extends BaseAIProvider {
         yield { type: 'complete' }
       }
     }
+  }
+
+  get name(): string {
+    return 'claude'
+  }
+
+  get supportedModels(): string[] {
+    return [
+      'claude-opus-4-20250514',
+      'claude-sonnet-4-20250514',
+      'claude-3-5-haiku-20241022',
+      'claude-3-5-sonnet-20241022',
+      'claude-3-opus-20240229',
+    ]
   }
 }

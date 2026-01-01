@@ -9,48 +9,44 @@ export const createDraftsCollection = (
 ): CollectionConfig => {
   const config: CollectionConfig = {
     slug: 'ai-admin-drafts',
-    labels: {
-      singular: 'AI Draft',
-      plural: 'AI Drafts',
+    access: {
+      create: ({ req }) => !!req.user,
+      delete: ({ req }) => {
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
+        return {
+          user: { equals: req.user.id },
+        }
+      },
+      read: ({ req }) => {
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
+        return {
+          user: { equals: req.user.id },
+        }
+      },
+      update: ({ req }) => {
+        if (!req.user) {return false}
+        if ((req.user as any).role === 'admin') {return true}
+        return {
+          user: { equals: req.user.id },
+        }
+      },
     },
     admin: {
-      group: 'AI Admin',
-      description: 'AI-generated content drafts awaiting review',
       defaultColumns: ['title', 'collection', 'status', 'createdAt'],
+      description: 'AI-generated content drafts awaiting review',
+      group: 'AI Admin',
       useAsTitle: 'title',
-    },
-    access: {
-      read: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
-        return {
-          user: { equals: req.user.id },
-        }
-      },
-      create: ({ req }) => !!req.user,
-      update: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
-        return {
-          user: { equals: req.user.id },
-        }
-      },
-      delete: ({ req }) => {
-        if (!req.user) return false
-        if ((req.user as any).role === 'admin') return true
-        return {
-          user: { equals: req.user.id },
-        }
-      },
     },
     fields: [
       {
         name: 'title',
         type: 'text',
-        required: true,
         admin: {
           description: 'Draft title (auto-generated from content)',
         },
+        required: true,
       },
       {
         name: 'user',
@@ -61,25 +57,25 @@ export const createDraftsCollection = (
       {
         name: 'sessionId',
         type: 'text',
-        required: true,
         index: true,
+        required: true,
       },
       {
         name: 'conversationId',
         type: 'relationship',
-        relationTo: 'ai-admin-conversations',
         admin: {
           description: 'Conversation that generated this draft',
         },
+        relationTo: 'ai-admin-conversations',
       },
       {
         name: 'collection',
         type: 'text',
-        required: true,
-        index: true,
         admin: {
           description: 'Target collection slug',
         },
+        index: true,
+        required: true,
       },
       {
         name: 'documentId',
@@ -91,54 +87,54 @@ export const createDraftsCollection = (
       {
         name: 'operation',
         type: 'select',
+        defaultValue: 'create',
         options: [
           { label: 'Create', value: 'create' },
           { label: 'Update', value: 'update' },
         ],
         required: true,
-        defaultValue: 'create',
       },
       {
         name: 'content',
         type: 'json',
-        required: true,
         admin: {
           description: 'Generated content to be applied',
         },
+        required: true,
       },
       {
         name: 'prompt',
         type: 'textarea',
-        required: true,
         admin: {
           description: 'Original prompt that generated this content',
         },
+        required: true,
       },
       {
         name: 'provider',
         type: 'select',
+        admin: {
+          description: 'AI provider that generated this draft',
+        },
         options: [
           { label: 'Claude', value: 'claude' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Gemini', value: 'gemini' },
           { label: 'Grok', value: 'grok' },
         ],
-        admin: {
-          description: 'AI provider that generated this draft',
-        },
       },
       {
         name: 'status',
         type: 'select',
+        defaultValue: 'draft',
+        index: true,
         options: [
           { label: 'Draft', value: 'draft' },
           { label: 'Applied', value: 'applied' },
           { label: 'Discarded', value: 'discarded' },
           { label: 'Expired', value: 'expired' },
         ],
-        defaultValue: 'draft',
         required: true,
-        index: true,
       },
       {
         name: 'appliedAt',
@@ -157,10 +153,10 @@ export const createDraftsCollection = (
       {
         name: 'expiresAt',
         type: 'date',
-        required: true,
         admin: {
           description: 'When the draft expires',
         },
+        required: true,
       },
       {
         name: 'diff',
@@ -170,7 +166,6 @@ export const createDraftsCollection = (
         },
       },
     ],
-    timestamps: true,
     hooks: {
       beforeChange: [
         ({ data, operation }) => {
@@ -192,6 +187,11 @@ export const createDraftsCollection = (
         },
       ],
     },
+    labels: {
+      plural: 'AI Drafts',
+      singular: 'AI Draft',
+    },
+    timestamps: true,
   }
 
   return override ? override(config) : config
