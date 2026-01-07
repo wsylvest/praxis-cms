@@ -1,151 +1,432 @@
-<a href="https://payloadcms.com"><img width="100%" src="https://l4wlsi8vxy8hre4v.public.blob.vercel-storage.com/github-banner-new-logo.jpg" alt="Payload headless CMS Admin panel built with React" /></a>
-<br />
-<br />
+# Praxis CMS
 
 <p align="left">
-  <a href="https://github.com/payloadcms/payload/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/payloadcms/payload/main.yml?style=flat-square"></a>
+  <a href="https://github.com/praxis-cms/praxis/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/praxis-cms/praxis/main.yml?style=flat-square"></a>
   &nbsp;
-  <a href="https://discord.gg/payload"><img alt="Discord" src="https://img.shields.io/discord/967097582721572934?label=Discord&color=7289da&style=flat-square" /></a>
-  &nbsp;
-  <a href="https://www.npmjs.com/package/payload"><img alt="npm" src="https://img.shields.io/npm/dw/payload?style=flat-square" /></a>
-  &nbsp;
-  <a href="https://github.com/payloadcms/payload/graphs/contributors"><img alt="npm" src="https://img.shields.io/github/contributors-anon/payloadcms/payload?color=yellow&style=flat-square" /></a>
-  &nbsp;
-  <a href="https://www.npmjs.com/package/payload"><img alt="npm" src="https://img.shields.io/npm/v/payload?style=flat-square" /></a>
-  &nbsp;
-  <a href="https://twitter.com/payloadcms"><img src="https://img.shields.io/badge/follow-payloadcms-1DA1F2?logo=twitter&style=flat-square" alt="Payload Twitter" /></a>
+  <a href="https://www.npmjs.com/package/praxis-cms"><img alt="npm" src="https://img.shields.io/npm/v/praxis-cms?style=flat-square" /></a>
 </p>
-<hr/>
-<h4>
-<a target="_blank" href="https://payloadcms.com/docs/getting-started/what-is-payload" rel="dofollow"><strong>Explore the Docs</strong></a>&nbsp;·&nbsp;<a target="_blank" href="https://payloadcms.com/community-help" rel="dofollow"><strong>Community Help</strong></a>&nbsp;·&nbsp;<a target="_blank" href="https://github.com/payloadcms/payload/discussions/1539" rel="dofollow"><strong>Roadmap</strong></a>&nbsp;·&nbsp;<a target="_blank" href="https://www.g2.com/products/payload-cms/reviews#reviews" rel="dofollow"><strong>View G2 Reviews</strong></a>
-</h4>
-<hr/>
 
-> [!IMPORTANT]
-> Star this repo or keep an eye on it to follow along.
+---
 
-Payload is the first-ever Next.js native CMS that can install directly in your existing `/app` folder. It's the start of a new era for headless CMS.
+**Praxis CMS** is a modern, Next.js native content management system built for developers who need full control over their backend, frontend, and admin experiences.
 
-<h3>Benefits over a regular CMS</h3>
-<ul>
-   <li>It's both an app framework & headless CMS</li>
-  <li>Deploy anywhere, including serverless on Vercel for free</li>
-  <li>Combine your front+backend in the same <code>/app</code> folder if you want</li>
-  <li>Don't sign up for yet another SaaS - Payload is open source</li>
-  <li>Query your database in React Server Components</li>
-  <li>Both admin and backend are 100% extensible</li>
-  <li>No vendor lock-in</li>
-  <li>Never touch ancient WP code again</li>
-  <li>Build faster, never hit a roadblock</li>
-</ul>
+## Features
 
-## Quickstart
+- **Next.js Native** - Installs directly in your `/app` folder
+- **PostgreSQL First** - Production-ready with Postgres out of the box
+- **Full TypeScript** - Complete type safety with auto-generated types
+- **React Server Components** - Modern admin UI built with RSC
+- **REST & GraphQL APIs** - Automatic API generation
+- **Authentication** - Built-in auth with customizable strategies
+- **Access Control** - Granular, field-level permissions
+- **File Storage** - Integrated media management with image processing
+- **Live Preview** - See content changes in real-time
+- **Open Source** - MIT licensed, deploy anywhere
 
-Before beginning to work with Payload, make sure you have all of the [required software](https://payloadcms.com/docs/getting-started/installation).
+## Quick Start (From Scratch with Postgres)
 
-```text
-pnpx create-payload-app@latest
+This guide walks you through setting up a complete Praxis CMS installation with:
+
+- **Backend**: API and database layer with PostgreSQL
+- **Admin**: Full-featured admin panel
+- **Frontend**: Next.js frontend with React Server Components
+
+### Prerequisites
+
+- Node.js 20.9.0 or higher
+- pnpm (recommended) or npm
+- PostgreSQL 14 or higher (local or cloud-hosted)
+- Docker (optional, for local PostgreSQL)
+
+### Step 1: Create a New Project
+
+```bash
+# Create a new Next.js project
+pnpm create next-app@latest my-praxis-app
+cd my-praxis-app
+
+# Or use the Praxis starter template
+pnpm dlx create-praxis-app@latest my-praxis-app
+cd my-praxis-app
 ```
 
-**If you're new to Payload, you should start with the website template** (`pnpx create-payload-app@latest -t website`). It shows how to do _everything_ - including custom Rich Text blocks, on-demand revalidation, live preview, and more. It comes with a frontend built with Tailwind all in one `/app` folder.
+### Step 2: Install Dependencies
 
-## One-click deployment options
+```bash
+# Core Praxis packages
+pnpm add praxis @praxiscms/next @praxiscms/richtext-lexical sharp graphql
 
-You can deploy Payload serverlessly in one-click via Vercel and Cloudflare—giving everything you need without the hassle of the plumbing.
-
-### Deploy on Cloudflare
-
-Fully self-contained — one click to deploy Payload with **Workers**, **R2** for uploads, and **D1** for a globally replicated database.
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://dub.sh/payload-cloudflare)
-
-### Deploy on Vercel
-
-All-in-one on Vercel — one click to deploy Payload with a **Next.js** front end, **Neon** database, and **Vercel Blob** for media storage.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://dub.sh/payload-vercel)
-
-## One-click templates
-
-Jumpstart your next project with a ready-to-go template. These are **production-ready, end-to-end solutions** designed to get you to market fast. Build any kind of **website**, **ecommerce store**, **blog**, or **portfolio** — complete with a modern front end built using **React Server Components** and **Tailwind**.
-
-#### 🌐 [Website](https://github.com/payloadcms/payload/tree/main/templates/website)
-
-#### 🛍️ [Ecommerce](https://github.com/payloadcms/payload/tree/main/templates/ecommerce) 🎉 _**NEW**_ 🎉
-
-We're constantly adding more templates to our [**Templates Directory**](https://github.com/payloadcms/payload/tree/main/templates).
-If you maintain your own, add the `payload-template` topic to your GitHub repo so others can discover it.
-
-**🔗 Explore more:**
-
-- [Official Templates](https://github.com/payloadcms/payload/tree/main/templates)
-- [Community Templates](https://github.com/topics/payload-template)
-
-## ✨ Payload Features
-
-- Completely free and open-source
-- Next.js native, built to run inside _your_ `/app` folder
-- Use server components to extend Payload UI
-- Query your database directly in server components, no need for REST / GraphQL
-- Fully TypeScript with automatic types for your data
-- [Auth out of the box](https://payloadcms.com/docs/authentication/overview)
-- [Versions and drafts](https://payloadcms.com/docs/versions/overview)
-- [Localization](https://payloadcms.com/docs/configuration/localization)
-- [Block-based layout builder](https://payloadcms.com/docs/fields/blocks)
-- [Customizable React admin](https://payloadcms.com/docs/admin/overview)
-- [Lexical rich text editor](https://payloadcms.com/docs/fields/rich-text)
-- [Conditional field logic](https://payloadcms.com/docs/fields/overview#conditional-logic)
-- Extremely granular [Access Control](https://payloadcms.com/docs/access-control/overview)
-- [Document and field-level hooks](https://payloadcms.com/docs/hooks/overview) for every action Payload provides
-- Intensely fast API
-- Highly secure thanks to HTTP-only cookies, CSRF protection, and more
-
-<a target="_blank" href="https://github.com/payloadcms/payload/discussions"><strong>Request Feature</strong></a>
-
-## 🗒️ Documentation
-
-Check out the [Payload website](https://payloadcms.com/docs/getting-started/what-is-payload) to find in-depth documentation for everything that Payload offers.
-
-Migrating from v2 to v3? Check out the [3.0 Migration Guide](https://github.com/payloadcms/payload/blob/main/docs/migration-guide/overview.mdx) on how to do it.
-
-## 🙋 Contributing
-
-If you want to add contributions to this repository, please follow the instructions in [contributing.md](./CONTRIBUTING.md).
-
-## 📚 Examples
-
-The [Examples Directory](./examples) is a great resource for learning how to setup Payload in a variety of different ways, but you can also find great examples in our blog and throughout our social media.
-
-If you'd like to run the examples, you can use `create-payload-app` to create a project from one:
-
-```sh
-npx create-payload-app --example example_name
+# PostgreSQL adapter
+pnpm add @praxiscms/db-postgres
 ```
 
-You can see more examples at:
+### Step 3: Set Up PostgreSQL
 
-- [Examples Directory](./examples)
-- [Payload Blog](https://payloadcms.com/blog)
-- [Payload YouTube](https://www.youtube.com/@payloadcms)
+**Option A: Using Docker (Recommended for Development)**
 
-## 🔌 Plugins
+Create a `docker-compose.yml` file:
 
-Payload is highly extensible and allows you to install or distribute plugins that add or remove functionality. There are both officially-supported and community-supported plugins available. If you maintain your own plugin, consider adding the `payload-plugin` topic to your GitHub repository for others to find.
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: praxis
+      POSTGRES_PASSWORD: praxis_password
+      POSTGRES_DB: praxis_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-- [Official Plugins](https://github.com/orgs/payloadcms/repositories?q=topic%3Apayload-plugin)
-- [Community Plugins](https://github.com/topics/payload-plugin)
+volumes:
+  postgres_data:
+```
 
-## 🚨 Need help?
+Start PostgreSQL:
 
-There are lots of good conversations and resources in our Github Discussions board and our Discord Server. If you're struggling with something, chances are, someone's already solved what you're up against. :point_down:
+```bash
+docker-compose up -d
+```
 
-- [GitHub Discussions](https://github.com/payloadcms/payload/discussions)
-- [GitHub Issues](https://github.com/payloadcms/payload/issues)
-- [Discord](https://t.co/30APlsQUPB)
-- [Community Help](https://payloadcms.com/community-help)
+**Option B: Using a Cloud Provider**
 
-## ⭐ Like what we're doing? Give us a star
+Use your preferred PostgreSQL provider (Neon, Supabase, AWS RDS, etc.) and obtain your connection string.
 
-## 👏 Thanks to all our contributors
+### Step 4: Configure Environment Variables
 
-<img align="left" src="https://contributors-img.web.app/image?repo=payloadcms/payload"/>
+Create a `.env` file in your project root:
+
+```env
+# Database
+DATABASE_URL=postgresql://praxis:praxis_password@localhost:5432/praxis_db
+
+# Praxis Secret (generate a secure random string)
+PAYLOAD_SECRET=your-super-secret-key-min-32-characters
+
+# Optional: Server URL for production
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+```
+
+### Step 5: Create the Praxis Configuration
+
+Create `src/payload.config.ts`:
+
+```typescript
+import { postgresAdapter } from '@praxiscms/db-postgres'
+import { lexicalEditor } from '@praxiscms/richtext-lexical'
+import path from 'path'
+import { buildConfig } from 'praxis'
+import { fileURLToPath } from 'url'
+import sharp from 'sharp'
+
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
+
+export default buildConfig({
+  admin: {
+    user: 'users',
+    importMap: {
+      baseDir: path.resolve(dirname),
+    },
+  },
+  collections: [
+    {
+      slug: 'users',
+      auth: true,
+      admin: {
+        useAsTitle: 'email',
+      },
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+        },
+      ],
+    },
+    {
+      slug: 'media',
+      upload: {
+        staticDir: 'media',
+        mimeTypes: ['image/*', 'application/pdf'],
+      },
+      fields: [
+        {
+          name: 'alt',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    {
+      slug: 'pages',
+      admin: {
+        useAsTitle: 'title',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'slug',
+          type: 'text',
+          required: true,
+          unique: true,
+        },
+        {
+          name: 'content',
+          type: 'richText',
+        },
+        {
+          name: 'publishedAt',
+          type: 'date',
+        },
+      ],
+    },
+  ],
+  editor: lexicalEditor(),
+  secret: process.env.PAYLOAD_SECRET || '',
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || '',
+    },
+  }),
+  sharp,
+})
+```
+
+### Step 6: Set Up the App Directory Structure
+
+Create the following directory structure in `src/app/`:
+
+```
+src/app/
+├── (frontend)/
+│   ├── layout.tsx      # Frontend layout
+│   ├── page.tsx        # Homepage
+│   └── [slug]/
+│       └── page.tsx    # Dynamic pages
+├── (payload)/
+│   ├── admin/
+│   │   ├── [[...segments]]/
+│   │   │   ├── page.tsx
+│   │   │   └── not-found.tsx
+│   │   └── importMap.js
+│   ├── api/
+│   │   ├── [...slug]/
+│   │   │   └── route.ts
+│   │   ├── graphql/
+│   │   │   └── route.ts
+│   │   └── graphql-playground/
+│   │       └── route.ts
+│   ├── layout.tsx
+│   └── custom.scss
+```
+
+**Create `src/app/(payload)/layout.tsx`:**
+
+```tsx
+import type { ServerFunctionClient } from 'praxis'
+import config from '@payload-config'
+import { RootLayout } from '@praxiscms/next/layouts'
+import React from 'react'
+import { importMap } from './admin/importMap'
+import './custom.scss'
+
+type Args = {
+  children: React.ReactNode
+}
+
+const Layout = ({ children }: Args) => (
+  <RootLayout config={config} importMap={importMap}>
+    {children}
+  </RootLayout>
+)
+
+export default Layout
+```
+
+**Create `src/app/(payload)/admin/[[...segments]]/page.tsx`:**
+
+```tsx
+import type { AdminViewServerProps } from 'praxis'
+import config from '@payload-config'
+import { RootPage, generatePageMetadata } from '@praxiscms/next/views'
+import { importMap } from '../importMap'
+
+type Args = {
+  params: Promise<{
+    segments: string[]
+  }>
+  searchParams: Promise<{
+    [key: string]: string | string[]
+  }>
+}
+
+export const generateMetadata = ({ params, searchParams }: Args) =>
+  generatePageMetadata({ config, params, searchParams })
+
+const Page = ({ params, searchParams }: Args) =>
+  RootPage({ config, importMap, params, searchParams })
+
+export default Page
+```
+
+**Create `src/app/(payload)/api/[...slug]/route.ts`:**
+
+```typescript
+import config from '@payload-config'
+import {
+  REST_DELETE,
+  REST_GET,
+  REST_OPTIONS,
+  REST_PATCH,
+  REST_POST,
+  REST_PUT,
+} from '@praxiscms/next/routes'
+
+export const GET = REST_GET(config)
+export const POST = REST_POST(config)
+export const DELETE = REST_DELETE(config)
+export const PATCH = REST_PATCH(config)
+export const PUT = REST_PUT(config)
+export const OPTIONS = REST_OPTIONS(config)
+```
+
+### Step 7: Update Next.js Configuration
+
+Update `next.config.mjs`:
+
+```javascript
+import { withPayload } from '@praxiscms/next/withPayload'
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    reactCompiler: false,
+  },
+}
+
+export default withPayload(nextConfig)
+```
+
+### Step 8: Update TypeScript Configuration
+
+Add the path alias to `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@payload-config": ["./src/payload.config.ts"]
+    }
+  }
+}
+```
+
+### Step 9: Start Development
+
+```bash
+# Start the development server
+pnpm dev
+```
+
+Visit:
+
+- **Admin Panel**: http://localhost:3000/admin
+- **Frontend**: http://localhost:3000
+- **REST API**: http://localhost:3000/api
+- **GraphQL Playground**: http://localhost:3000/api/graphql-playground
+
+On first visit to the admin panel, you'll be prompted to create your first admin user.
+
+## Project Structure
+
+```
+my-praxis-app/
+├── src/
+│   ├── app/
+│   │   ├── (frontend)/       # Your frontend routes
+│   │   └── (payload)/        # Admin panel and API routes
+│   ├── collections/          # Collection definitions (optional)
+│   ├── payload.config.ts     # Praxis configuration
+│   └── payload-types.ts      # Auto-generated TypeScript types
+├── media/                    # Uploaded files
+├── .env                      # Environment variables
+├── docker-compose.yml        # PostgreSQL container
+├── next.config.mjs          # Next.js configuration
+├── package.json
+└── tsconfig.json
+```
+
+## Database Commands
+
+```bash
+# Generate TypeScript types from your collections
+pnpm praxis generate:types
+
+# Create a new migration
+pnpm praxis migrate:create
+
+# Run pending migrations
+pnpm praxis migrate
+
+# Reset the database (development only)
+pnpm praxis migrate:reset
+```
+
+## Production Deployment
+
+### Environment Variables for Production
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
+PAYLOAD_SECRET=your-production-secret-min-32-characters
+NEXT_PUBLIC_SERVER_URL=https://your-domain.com
+```
+
+### Build and Deploy
+
+```bash
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+## Documentation
+
+- [Configuration Guide](./docs/configuration/overview.mdx)
+- [Collections](./docs/configuration/collections.mdx)
+- [Fields](./docs/fields/overview.mdx)
+- [Authentication](./docs/authentication/overview.mdx)
+- [Access Control](./docs/access-control/overview.mdx)
+- [Hooks](./docs/hooks/overview.mdx)
+- [REST API](./docs/rest-api/overview.mdx)
+- [GraphQL API](./docs/graphql/overview.mdx)
+- [Admin Panel Customization](./docs/admin/overview.mdx)
+
+## Examples
+
+The [examples directory](./examples) contains various implementation patterns:
+
+- [Authentication](./examples/auth)
+- [Custom Components](./examples/custom-components)
+- [Live Preview](./examples/live-preview)
+- [Multi-tenant](./examples/multi-tenant)
+- [Form Builder](./examples/form-builder)
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for details.
+
+## License
+
+MIT License - see [LICENSE.md](./LICENSE.md)
