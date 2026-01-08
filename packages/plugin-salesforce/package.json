@@ -1,0 +1,88 @@
+{
+  "name": "@payloadcms/plugin-salesforce",
+  "version": "0.1.0",
+  "description": "Salesforce lead capture integration plugin for Praxis CMS",
+  "keywords": [
+    "payload",
+    "praxis",
+    "cms",
+    "plugin",
+    "typescript",
+    "salesforce",
+    "leads",
+    "crm",
+    "integration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/praxis-cms/praxis.git",
+    "directory": "packages/plugin-salesforce"
+  },
+  "license": "MIT",
+  "author": "Praxis CMS <dev@praxiscms.com>",
+  "maintainers": [
+    {
+      "name": "Praxis CMS",
+      "email": "info@praxiscms.com"
+    }
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./types": {
+      "import": "./src/exports/types.ts",
+      "types": "./src/exports/types.ts",
+      "default": "./src/exports/types.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm build:types && pnpm build:swc",
+    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "clean": "rimraf -g {dist,*.tsbuildinfo}",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@payloadcms/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@payloadcms/eslint-config": "workspace:*",
+    "@types/node": "^22.5.4",
+    "@types/react": "19.2.1",
+    "@types/react-dom": "19.2.1",
+    "payload": "workspace:*"
+  },
+  "peerDependencies": {
+    "payload": "workspace:*",
+    "react": "^19.0.1 || ^19.1.2 || ^19.2.1",
+    "react-dom": "^19.0.1 || ^19.1.2 || ^19.2.1"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./types": {
+        "import": "./dist/exports/types.js",
+        "types": "./dist/exports/types.d.ts",
+        "default": "./dist/exports/types.js"
+      }
+    },
+    "main": "./dist/index.js",
+    "registry": "https://registry.npmjs.org/",
+    "types": "./dist/index.d.ts"
+  }
+}

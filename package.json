@@ -51,6 +51,7 @@
     "build:plugin-redirects": "turbo build --filter \"@payloadcms/plugin-redirects\"",
     "build:plugin-search": "turbo build --filter \"@payloadcms/plugin-search\"",
     "build:plugin-sentry": "turbo build --filter \"@payloadcms/plugin-sentry\"",
+    "build:plugin-salesforce": "turbo build --filter \"@payloadcms/plugin-salesforce\"",
     "build:plugin-seo": "turbo build --filter \"@payloadcms/plugin-seo\"",
     "build:plugin-stripe": "turbo build --filter \"@payloadcms/plugin-stripe\"",
     "build:plugins": "turbo build --filter \"@payloadcms/plugin-*\"",
