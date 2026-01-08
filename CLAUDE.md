@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Structure
 
-Payload is a monorepo structured around Next.js, containing the core CMS platform, database adapters, plugins, and tooling.
+Praxis CMS is a monorepo structured around Next.js, containing the core CMS platform, database adapters, plugins, and tooling.
 
 ### Key Directories
 
 - `packages/` - All publishable packages
-  - `packages/payload` - Core Payload package containing the main CMS logic
+  - `packages/payload` - Core Praxis package containing the main CMS logic
   - `packages/ui` - Admin UI components (React Server Components)
   - `packages/next` - Next.js integration layer
   - `packages/db-*` - Database adapters (MongoDB, Postgres, SQLite, Vercel Postgres, D1 SQLite)
@@ -21,16 +21,16 @@ Payload is a monorepo structured around Next.js, containing the core CMS platfor
   - `packages/plugin-*` - Additional functionality plugins
   - `packages/graphql` - GraphQL API layer
   - `packages/translations` - i18n translations
-  - `packages/sdk` - TypeScript SDK for Payload API
-- `test/` - Test suites organized by feature area. Each directory contains a granular Payload config and test files
-- `docs/` - Documentation (deployed to payloadcms.com)
+  - `packages/sdk` - TypeScript SDK for Praxis API
+- `test/` - Test suites organized by feature area. Each directory contains a granular Praxis config and test files
+- `docs/` - Documentation
 - `tools/` - Monorepo tooling
 - `templates/` - Production-ready project templates
 - `examples/` - Example implementations
 
 ### Architecture Notes
 
-- Payload 3.x is built as a Next.js native CMS that installs directly in `/app` folder
+- Praxis 3.x is built as a Next.js native CMS that installs directly in `/app` folder
 - UI is built with React Server Components (RSC)
 - Database adapters use Drizzle ORM under the hood
 - Packages use TypeScript with strict mode and path mappings defined in `tsconfig.base.json`
@@ -76,9 +76,9 @@ Payload is a monorepo structured around Next.js, containing the core CMS platfor
 
 ### Development Environment
 
-- Auto-login is enabled by default with credentials: `dev@payloadcms.com` / `test`
-- To disable: pass `--no-auto-login` flag or set `PAYLOAD_PUBLIC_DISABLE_AUTO_LOGIN=false`
-- Default database is MongoDB (in-memory). Switch to Postgres with `PAYLOAD_DATABASE=postgres`
+- Auto-login is enabled by default with credentials: `dev@praxiscms.com` / `test`
+- To disable: pass `--no-auto-login` flag or set `PRAXIS_PUBLIC_DISABLE_AUTO_LOGIN=false`
+- Default database is MongoDB (in-memory). Switch to Postgres with `PRAXIS_DATABASE=postgres`
 - Docker services: `pnpm docker:start` / `pnpm docker:stop` / `pnpm docker:restart`
 
 ## Testing
@@ -96,7 +96,7 @@ Each test directory in `test/` follows this pattern:
 
 ```
 test/<feature-name>/
-├── config.ts        # Lightweight Payload config for testing
+├── config.ts        # Lightweight Praxis config for testing
 ├── int.spec.ts      # Integration tests (Vitest)
 ├── e2e.spec.ts      # End-to-end tests (Playwright)
 └── payload-types.ts # Generated types
@@ -158,7 +158,5 @@ Examples:
 
 ## Additional Resources
 
-- LLMS.txt: <https://payloadcms.com/llms.txt>
-- LLMS-FULL.txt: <https://payloadcms.com/llms-full.txt>
 - Node version: ^18.20.2 || >=20.9.0
 - pnpm version: ^9.7.0

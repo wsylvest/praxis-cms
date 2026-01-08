@@ -2,194 +2,458 @@
 title: Installation
 label: Installation
 order: 30
-desc: To quickly get started with Payload, simply run npx create-payload-app or install from scratch.
-keywords: documentation, getting started, guide, Content Management System, cms, headless, javascript, node, react, nextjs
+desc: Complete guide to installing Praxis CMS from scratch with PostgreSQL for backend, frontend, and admin panel.
+keywords: documentation, getting started, guide, Content Management System, cms, headless, javascript, node, react, nextjs, postgres, postgresql
 ---
 
 ## Software Requirements
 
-Payload requires the following software:
+Praxis CMS requires the following software:
 
-- Any JavaScript package manager (pnpm, npm, or yarn - pnpm is preferred)
+- Any JavaScript package manager (pnpm, npm, or yarn - pnpm is recommended)
 - Node.js version 20.9.0+
-- Any [compatible database](/docs/database/overview) (MongoDB, Postgres or SQLite)
+- PostgreSQL 14+ (recommended for production)
+- Any [compatible database](/docs/database/overview) (MongoDB, Postgres, or SQLite)
 
 <Banner type="warning">
   **Important:** Before proceeding any further, please ensure that you have the
   above requirements met.
 </Banner>
 
-## Quickstart with create-payload-app
+## Quickstart with create-praxis-app
 
-To quickly scaffold a new Payload app in the fastest way possible, you can use [create-payload-app](https://npmjs.com/package/create-payload-app). To do so, run the following command:
-
-```
-npx create-payload-app
-```
-
-Then just follow the prompts! You'll get set up with a new folder and a functioning Payload app inside. You can then start [configuring your application](../configuration/overview).
-
-## Adding to an existing app
-
-Adding Payload to an existing Next.js app is super straightforward. You can either run the `npx create-payload-app` command inside your Next.js project's folder, or manually install Payload by following the steps below.
-
-If you don't have a Next.js app already, but you still want to start a project from a blank Next.js app, you can create a new Next.js app using `npx create-next-app` - and then just follow the steps below to install Payload.
-
-<Banner type="info">
-  **Note:** Next.js version 15 or higher is required for Payload.
-</Banner>
-
-#### 1. Install the relevant packages
-
-First, you'll want to add the required Payload packages to your project and can do so by running the command below:
+To quickly scaffold a new Praxis app with PostgreSQL, run:
 
 ```bash
-pnpm i payload @payloadcms/next @payloadcms/richtext-lexical sharp graphql
+pnpm dlx create-praxis-app@latest
+```
+
+Then follow the prompts and select PostgreSQL as your database. You'll get a fully configured project with backend, admin panel, and frontend ready to go.
+
+## Manual Installation (From Scratch)
+
+This guide walks you through setting up a complete Praxis CMS installation with:
+
+- **Backend**: REST and GraphQL APIs with PostgreSQL
+- **Admin Panel**: Full-featured content management interface
+- **Frontend**: Next.js frontend with React Server Components
+
+### Step 1: Create a New Next.js Project
+
+Start with a fresh Next.js application:
+
+```bash
+pnpm create next-app@latest my-praxis-app
+cd my-praxis-app
+```
+
+<Banner type="info">
+  **Note:** Next.js version 15 or higher is required for Praxis.
+</Banner>
+
+### Step 2: Install Core Packages
+
+Install the required Praxis packages:
+
+```bash
+pnpm add praxis @praxiscms/next @praxiscms/richtext-lexical sharp graphql
 ```
 
 <Banner type="warning">
-  **Note:** Swap out `pnpm` for your package manager. If you are using npm, you
-  might need to install using legacy peer deps: `npm i --legacy-peer-deps`.
+  **Note:** If using npm, you might need to install using legacy peer deps: `npm
+  i --legacy-peer-deps`.
 </Banner>
 
-Next, install a [Database Adapter](/docs/database/overview). Payload requires a Database Adapter to establish a database connection. Payload works with all types of databases, but the most common are MongoDB and Postgres.
+### Step 3: Install the PostgreSQL Adapter
 
-To install a Database Adapter, you can run **one** of the following commands:
+Install the [PostgreSQL Adapter](/docs/database/postgres):
 
-- To install the [MongoDB Adapter](../database/mongodb), run:
-
-  ```bash
-  pnpm i @payloadcms/db-mongodb
-  ```
-
-- To install the [Postgres Adapter](../database/postgres), run:
-
-  ```bash
-  pnpm i @payloadcms/db-postgres
-  ```
-
-- To install the [SQLite Adapter](../database/sqlite), run:
-  ```bash
-  pnpm i @payloadcms/db-sqlite
-  ```
+```bash
+pnpm add @praxiscms/db-postgres
+```
 
 <Banner type="success">
-  **Note:** New [Database Adapters](/docs/database/overview) are becoming
-  available every day. Check the docs for the most up-to-date list of what's
-  available.
+  **Tip:** PostgreSQL is recommended for production deployments due to its
+  reliability, performance, and support for migrations.
 </Banner>
 
-#### 2. Copy Payload files into your Next.js app folder
+### Step 4: Set Up PostgreSQL
 
-Payload installs directly in your Next.js `/app` folder, and you'll need to place some files into that folder for Payload to run. You can copy these files from the [Blank Template](https://github.com/payloadcms/payload/tree/main/templates/blank/src/app/%28payload%29) on GitHub. Once you have the required Payload files in place in your `/app` folder, you should have something like this:
+You can run PostgreSQL locally using Docker or use a cloud-hosted database.
 
-```plaintext
-app/
-├─ (payload)/
-├── // Payload files
-├─ (my-app)/
-├── // Your app files
+**Option A: Using Docker (Recommended for Development)**
+
+Create a `docker-compose.yml` file in your project root:
+
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: praxis
+      POSTGRES_PASSWORD: praxis_password
+      POSTGRES_DB: praxis_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 ```
+
+Start the database:
+
+```bash
+docker-compose up -d
+```
+
+**Option B: Cloud PostgreSQL Providers**
+
+Use your preferred PostgreSQL provider:
+
+- [Neon](https://neon.tech) - Serverless Postgres
+- [Supabase](https://supabase.com) - Open source Firebase alternative
+- [AWS RDS](https://aws.amazon.com/rds/postgresql/) - Managed PostgreSQL
+- [Railway](https://railway.app) - Simple cloud hosting
+
+Obtain your connection string from your provider.
+
+### Step 5: Configure Environment Variables
+
+Create a `.env` file in your project root:
+
+```env
+# Database Connection
+DATABASE_URL=postgresql://praxis:praxis_password@localhost:5432/praxis_db
+
+# Praxis Secret (minimum 32 characters - generate a secure random string)
+PAYLOAD_SECRET=your-super-secret-key-minimum-32-characters-long
+
+# Server URL (update for production)
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+```
+
+<Banner type="warning">
+  **Security:** Never commit your `.env` file to version control. Add it to your
+  `.gitignore`.
+</Banner>
+
+### Step 6: Create the Praxis Configuration
+
+Create `src/payload.config.ts` (or `payload.config.ts` in the root):
+
+```typescript
+import { postgresAdapter } from '@praxiscms/db-postgres'
+import { lexicalEditor } from '@praxiscms/richtext-lexical'
+import path from 'path'
+import { buildConfig } from 'praxis'
+import { fileURLToPath } from 'url'
+import sharp from 'sharp'
+
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
+
+export default buildConfig({
+  admin: {
+    user: 'users',
+    importMap: {
+      baseDir: path.resolve(dirname),
+    },
+  },
+  collections: [
+    // Users Collection (required for authentication)
+    {
+      slug: 'users',
+      auth: true,
+      admin: {
+        useAsTitle: 'email',
+      },
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+        },
+        {
+          name: 'role',
+          type: 'select',
+          options: ['admin', 'editor', 'user'],
+          defaultValue: 'user',
+        },
+      ],
+    },
+    // Media Collection (for file uploads)
+    {
+      slug: 'media',
+      upload: {
+        staticDir: 'media',
+        mimeTypes: ['image/*', 'application/pdf'],
+      },
+      fields: [
+        {
+          name: 'alt',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    // Pages Collection (example content type)
+    {
+      slug: 'pages',
+      admin: {
+        useAsTitle: 'title',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'slug',
+          type: 'text',
+          required: true,
+          unique: true,
+          admin: {
+            position: 'sidebar',
+          },
+        },
+        {
+          name: 'content',
+          type: 'richText',
+        },
+        {
+          name: 'status',
+          type: 'select',
+          options: ['draft', 'published'],
+          defaultValue: 'draft',
+          admin: {
+            position: 'sidebar',
+          },
+        },
+      ],
+    },
+  ],
+  editor: lexicalEditor(),
+  secret: process.env.PAYLOAD_SECRET || '',
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || '',
+    },
+  }),
+  sharp,
+})
+```
+
+### Step 7: Set Up the App Directory
+
+Praxis installs directly in your Next.js `/app` folder. Create the following structure:
+
+```
+src/app/
+├── (frontend)/           # Your frontend routes
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── [slug]/
+│       └── page.tsx
+├── (payload)/            # Praxis admin and API
+│   ├── admin/
+│   │   ├── [[...segments]]/
+│   │   │   ├── page.tsx
+│   │   │   └── not-found.tsx
+│   │   └── importMap.js
+│   ├── api/
+│   │   ├── [...slug]/
+│   │   │   └── route.ts
+│   │   ├── graphql/
+│   │   │   └── route.ts
+│   │   └── graphql-playground/
+│   │       └── route.ts
+│   ├── layout.tsx
+│   └── custom.scss
+```
+
+You can copy these files from the [Blank Template](https://github.com/praxis-cms/praxis/tree/main/templates/blank/src/app/%28payload%29) on GitHub.
 
 _For an exact reference of the `(payload)` directory, see [Project Structure](../admin/overview#project-structure)._
 
-<Banner type="warning">
-  You may need to copy all of your existing frontend files, including your
-  existing root layout, into its own newly created [Route
-  Group](https://nextjs.org/docs/app/building-your-application/routing/route-groups),
-  i.e. `(my-app)`.
+<Banner type="info">
+  The files in the `(payload)` directory do not regenerate and never change once
+  placed. They simply import Praxis dependencies for the REST/GraphQL API and
+  Admin Panel.
 </Banner>
 
-The files that Payload needs to have in your `/app` folder do not regenerate, and will never change. Once you slot them in, you never have to revisit them. They are not meant to be edited and simply import Payload dependencies from `@payloadcms/next` for the REST / GraphQL API and Admin Panel.
+### Step 8: Add the Praxis Plugin to Next.js Config
 
-You can name the `(my-app)` folder anything you want. The name does not matter and will just be used to clarify your directory structure for yourself. Common names might be `(frontend)`, `(app)`, or similar. [More details](../admin/overview).
+Update your `next.config.mjs`:
 
-#### 3. Add the Payload Plugin to your Next.js config
-
-Payload has a Next.js plugin that it uses to ensure compatibility with some of the packages Payload relies on, like `mongodb` or `drizzle-kit`.
-
-To add the Payload Plugin, use `withPayload` in your `next.config.js`:
-
-```js
-import { withPayload } from '@payloadcms/next/withPayload'
+```javascript
+import { withPayload } from '@praxiscms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Your Next.js config here
   experimental: {
     reactCompiler: false,
   },
 }
 
-// Make sure you wrap your `nextConfig`
-// with the `withPayload` plugin
-export default withPayload(nextConfig) // highlight-line
+export default withPayload(nextConfig)
 ```
 
 <Banner type="warning">
-  **Important:** Payload is a fully ESM project, and that means the
-  `withPayload` function is an ECMAScript module.
+  **Important:** Praxis is a fully ESM project. Your `next.config` must use ESM
+  syntax (import/export).
 </Banner>
 
-To import the Payload Plugin, you need to make sure your `next.config` file is set up to use ESM.
+To use ESM, either:
 
-You can do this in one of two ways:
-
-1. Set your own project to use ESM, by adding `"type": "module"` to your `package.json` file
+1. Add `"type": "module"` to your `package.json`
 2. Give your Next.js config the `.mjs` file extension
 
-In either case, all `require`s and `export`s in your `next.config` file will need to be converted to `import` / `export` if they are not set up that way already.
+### Step 9: Update TypeScript Configuration
 
-#### 4. Create a Payload Config and add it to your TypeScript config
-
-Finally, you need to create a [Payload Config](../configuration/overview). Generally the Payload Config is located at the root of your repository, or next to your `/app` folder, and is named `payload.config.ts`.
-
-Here's what Payload needs at a bare minimum:
-
-```ts
-import sharp from 'sharp'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { buildConfig } from 'payload'
-
-export default buildConfig({
-  // If you'd like to use Rich Text, pass your editor here
-  editor: lexicalEditor(),
-
-  // Define and configure your collections in this array
-  collections: [],
-
-  // Your Payload secret - should be a complex and secure string, unguessable
-  secret: process.env.PAYLOAD_SECRET || '',
-  // Whichever Database Adapter you're using should go here
-  // Mongoose is shown as an example, but you can also use Postgres
-  db: mongooseAdapter({
-    url: process.env.DATABASE_URL || '',
-  }),
-  // If you want to resize images, crop, set focal point, etc.
-  // make sure to install it and pass it to the config.
-  // This is optional - if you don't need to do these things,
-  // you don't need it!
-  sharp,
-})
-```
-
-Although this is just the bare minimum config, there are _many_ more options that you can control here. To reference the full config and all of its options, [click here](/docs/configuration/overview).
-
-Once you have a Payload Config, update your `tsconfig` to include a `path` that points to it:
+Add the path alias to your `tsconfig.json`:
 
 ```json
 {
   "compilerOptions": {
     "paths": {
-      "@payload-config": ["./payload.config.ts"]
+      "@payload-config": ["./src/payload.config.ts"]
     }
   }
 }
 ```
 
-#### 5. Fire it up!
+### Step 10: Start Development
 
-After you've reached this point, it's time to boot up Payload. Start your project in your application's folder to get going. By default, the Next.js dev script is `pnpm dev` (or `npm run dev` if using npm).
+Start your development server:
 
-After it starts, you can go to `http://localhost:3000/admin` to create your first Payload user!
+```bash
+pnpm dev
+```
+
+Visit the following URLs:
+
+| URL                                            | Description                               |
+| ---------------------------------------------- | ----------------------------------------- |
+| `http://localhost:3000/admin`                  | Admin Panel - Create your first user here |
+| `http://localhost:3000`                        | Frontend                                  |
+| `http://localhost:3000/api`                    | REST API                                  |
+| `http://localhost:3000/api/graphql-playground` | GraphQL Playground                        |
+
+On first visit to the admin panel, you'll be prompted to create your admin user.
+
+## Database Operations
+
+Praxis provides CLI commands for database management:
+
+```bash
+# Generate TypeScript types from your collections
+pnpm praxis generate:types
+
+# Create a new migration
+pnpm praxis migrate:create
+
+# Run pending migrations
+pnpm praxis migrate
+
+# Check migration status
+pnpm praxis migrate:status
+
+# Reset database (development only!)
+pnpm praxis migrate:reset
+```
+
+## Project Structure
+
+After setup, your project should look like this:
+
+```
+my-praxis-app/
+├── src/
+│   ├── app/
+│   │   ├── (frontend)/       # Your frontend routes
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   └── (payload)/        # Admin panel and API
+│   │       ├── admin/
+│   │       ├── api/
+│   │       └── layout.tsx
+│   ├── collections/          # Optional: Separate collection files
+│   ├── payload.config.ts     # Praxis configuration
+│   └── payload-types.ts      # Auto-generated TypeScript types
+├── media/                    # Uploaded files
+├── .env                      # Environment variables
+├── docker-compose.yml        # Local PostgreSQL
+├── next.config.mjs           # Next.js configuration
+├── package.json
+└── tsconfig.json
+```
+
+## Using the Local API
+
+In your React Server Components, you can query the database directly:
+
+```tsx
+import { getPayload } from 'praxis'
+import config from '@payload-config'
+
+export default async function HomePage() {
+  const payload = await getPayload({ config })
+
+  const pages = await payload.find({
+    collection: 'pages',
+    where: {
+      status: {
+        equals: 'published',
+      },
+    },
+  })
+
+  return (
+    <main>
+      <h1>Pages</h1>
+      <ul>
+        {pages.docs.map((page) => (
+          <li key={page.id}>{page.title}</li>
+        ))}
+      </ul>
+    </main>
+  )
+}
+```
+
+## Production Deployment
+
+### Environment Variables
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
+PAYLOAD_SECRET=your-production-secret-minimum-32-characters
+NEXT_PUBLIC_SERVER_URL=https://your-domain.com
+```
+
+### Build and Deploy
+
+```bash
+# Run migrations first
+pnpm praxis migrate
+
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+## Next Steps
+
+- [Learn about Collections](/docs/configuration/collections)
+- [Explore Field Types](/docs/fields/overview)
+- [Set up Authentication](/docs/authentication/overview)
+- [Configure Access Control](/docs/access-control/overview)
+- [Customize the Admin Panel](/docs/admin/overview)
