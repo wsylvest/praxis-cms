@@ -1,0 +1,46 @@
+{
+  "name": "@payloadcms/plugin-hubspot",
+  "version": "0.1.0",
+  "description": "HubSpot lead capture plugin for Praxis CMS - capture and sync leads to HubSpot CRM",
+  "keywords": [
+    "payload",
+    "praxis",
+    "cms",
+    "hubspot",
+    "lead-capture",
+    "crm",
+    "marketing",
+    "forms",
+    "contacts",
+    "plugin"
+  ],
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.mjs",
+      "require": "./dist/types.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "payload": "^3.0.0"
+  }
+}
