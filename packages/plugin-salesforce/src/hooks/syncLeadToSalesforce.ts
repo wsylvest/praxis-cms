@@ -94,9 +94,9 @@ async function logSyncOperation(
         status: data.status,
       },
     })
-  } catch (error) {
+  } catch (err) {
     payload.logger.error({
-      error,
+      err,
       msg: 'Failed to create sync log entry',
     })
   }
@@ -238,7 +238,7 @@ async function syncLead(
     }
 
     payload.logger.error({
-      error: errorMessage,
+      err: errorMessage,
       errorCode,
       leadId: lead.id,
       msg: 'Failed to sync lead to Salesforce',
@@ -252,7 +252,7 @@ async function syncLead(
 export function createSyncLeadHook(
   config: SalesforcePluginConfig,
 ): CollectionAfterChangeHook<LeadDocument> {
-  return async ({ doc, operation, req }) => {
+  return ({ doc, operation, req }) => {
     // Skip if plugin is disabled
     if (config.enabled === false) {
       return doc
@@ -269,9 +269,9 @@ export function createSyncLeadHook(
 
     // Sync in the background to not block the response
     setImmediate(() => {
-      syncLead(req.payload, doc, config, operation).catch((error) => {
+      syncLead(req.payload, doc, config, operation).catch((err) => {
         req.payload.logger.error({
-          error,
+          err,
           msg: 'Background sync failed',
         })
       })

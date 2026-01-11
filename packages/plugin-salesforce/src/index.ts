@@ -4,9 +4,12 @@ import type { SalesforcePluginConfig } from './types.js'
 
 import { generateLeadsCollection } from './collections/Leads.js'
 import { generateSyncLogsCollection } from './collections/SyncLogs.js'
+import { createRetrySyncEndpoint, createSyncEndpoint } from './endpoints/syncLead.js'
 import { createSyncLeadHook } from './hooks/syncLeadToSalesforce.js'
 
 export { createSalesforceClient, SalesforceApiError, SalesforceClient } from './api/client.js'
+export { SyncButton } from './components/SyncButton/index.js'
+export { SyncStatusBadge } from './components/SyncStatusBadge/index.js'
 export type {
   LeadDocument,
   LeadFieldMapping,
@@ -80,31 +83,41 @@ export const salesforcePlugin =
     if (existingLeadsIndex >= 0) {
       // Merge with existing leads collection
       const existingLeads = existingCollections[existingLeadsIndex]
-      const mergedLeads = {
-        ...existingLeads,
-        ...leadsCollection,
-        fields: [...(existingLeads.fields || []), ...(leadsCollection.fields || [])],
-        hooks: {
-          ...existingLeads.hooks,
-          ...leadsCollection.hooks,
-          afterChange: [
-            ...(existingLeads.hooks?.afterChange || []),
-            ...(leadsCollection.hooks?.afterChange || []),
-          ],
-        },
+      if (existingLeads) {
+        const mergedLeads = {
+          ...existingLeads,
+          ...leadsCollection,
+          fields: [...(existingLeads.fields || []), ...(leadsCollection.fields || [])],
+          hooks: {
+            ...existingLeads.hooks,
+            ...leadsCollection.hooks,
+            afterChange: [
+              ...(existingLeads.hooks?.afterChange || []),
+              ...(leadsCollection.hooks?.afterChange || []),
+            ],
+          },
+        }
+        collections = [
+          ...existingCollections.slice(0, existingLeadsIndex),
+          mergedLeads,
+          ...existingCollections.slice(existingLeadsIndex + 1),
+          syncLogsCollection,
+        ]
+      } else {
+        collections = [...existingCollections, leadsCollection, syncLogsCollection]
       }
-      collections = [
-        ...existingCollections.slice(0, existingLeadsIndex),
-        mergedLeads,
-        ...existingCollections.slice(existingLeadsIndex + 1),
-        syncLogsCollection,
-      ]
     } else {
       collections = [...existingCollections, leadsCollection, syncLogsCollection]
     }
 
+    // Create API endpoints for manual sync operations
+    const syncEndpoint = createSyncEndpoint(pluginConfig)
+    const retrySyncEndpoint = createRetrySyncEndpoint(pluginConfig)
+    const endpoints = [...(config.endpoints || []), syncEndpoint, retrySyncEndpoint]
+
     return {
       ...config,
       collections,
+      endpoints,
     }
   }

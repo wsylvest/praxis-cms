@@ -1,7 +1,7 @@
 export type {
   LeadDocument,
   LeadFieldMapping,
-  SalesforceApiError,
+  SalesforceApiErrorResponse,
   SalesforceApiResponse,
   SalesforceAuthResponse,
   SalesforceCredentials,

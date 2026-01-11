@@ -1,5 +1,5 @@
 import type {
-  SalesforceApiError,
+  SalesforceApiErrorResponse,
   SalesforceApiResponse,
   SalesforceAuthResponse,
   SalesforceCredentials,
@@ -58,7 +58,7 @@ export class SalesforceClient {
     }
 
     if (!response.ok) {
-      const errorData = (await response.json().catch(() => [])) as SalesforceApiError[]
+      const errorData = (await response.json().catch(() => [])) as SalesforceApiErrorResponse[]
       const firstError = errorData[0]
       if (firstError) {
         throw new SalesforceApiError(firstError.message, firstError.errorCode, firstError.fields)

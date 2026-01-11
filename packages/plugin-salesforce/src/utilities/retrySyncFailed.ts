@@ -108,7 +108,7 @@ export async function retrySyncFailedLeads(
 
       results.failed++
       payload.logger.error({
-        error: errorMessage,
+        err: errorMessage,
         leadId: lead.id,
         msg: 'Lead retry sync failed',
       })

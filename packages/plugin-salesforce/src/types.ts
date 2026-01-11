@@ -176,9 +176,9 @@ export type LeadDocument = {
 }
 
 /**
- * Salesforce API error response
+ * Salesforce API error response structure
  */
-export type SalesforceApiError = {
+export type SalesforceApiErrorResponse = {
   errorCode: string
   fields?: string[]
   message: string
@@ -188,7 +188,7 @@ export type SalesforceApiError = {
  * Salesforce API create/update response
  */
 export type SalesforceApiResponse = {
-  errors: SalesforceApiError[]
+  errors: SalesforceApiErrorResponse[]
   id: string
   success: boolean
 }
